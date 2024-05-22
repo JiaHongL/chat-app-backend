@@ -2,10 +2,10 @@ import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnectio
 import { Server } from 'ws';
 import { UserService } from '../user/user.service';
 import { ApiTags, ApiExtraModels } from '@nestjs/swagger';
-import { JoinRoomDto, SendMessageDto, PrivateMessageDto, MarkAsReadDto} from './websocket-docs';
+import { SendMessageDto, PrivateMessageDto, MarkAsReadDto} from './websocket-docs';
 
 @ApiTags('chat')
-@ApiExtraModels(JoinRoomDto, SendMessageDto, PrivateMessageDto, MarkAsReadDto)
+@ApiExtraModels(SendMessageDto, PrivateMessageDto, MarkAsReadDto)
 @WebSocketGateway({ 
   server: true 
 })
@@ -58,16 +58,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (username) {
       await this.userService.logout(username);
       this.updateOnlineUsers();
-    }
-  }
-
-  @SubscribeMessage('joinRoom')
-  handleJoinRoom(@MessageBody() room: JoinRoomDto, @ConnectedSocket() client: any) {
-    client['room'] = room.room;
-    if (room.room?.startsWith('private_')) {
-      const messages = this.messageHistory.privateMessages[room.room] || [];
-      client.send(JSON.stringify({ event: 'messageHistory', data: { room: room.room, messages } }));
-      client.send(JSON.stringify({ event: 'unreadMessages', data: { room: room.room, count: this.getUnreadCount(room.room, client['username']) } }));
     }
   }
 

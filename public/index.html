@@ -19,8 +19,7 @@
   </div>
   <div>
     <h1>JWT Token</h1>
-    <input id="tokenInput" placeholder="Enter JWT token...">
-    <button onclick="connectWebSocket()">Connect</button>
+    <input id="tokenInput" placeholder="JWT token...">
   </div>
   <div>
     <h1>General Chat</h1>
@@ -93,11 +92,6 @@
       socket.onopen = () => {
         console.log('Connected to server');
         document.getElementById('messageInput').disabled = false;
-        socket.send(JSON.stringify({ event: 'joinRoom', data: 'general' }));
-        console.log('send joinRoom general',{
-          event: 'joinRoom',
-          data: 'general'
-        });
       };
 
       socket.onmessage = (event) => {
@@ -228,7 +222,7 @@
         const privateMessagesList = document.getElementById(`privateMessages_${recipient}`);
         const item = document.createElement('li');
         item.textContent = `${sender}: ${message}`;
-        privateMessagesList.appendChild(item);
+        privateMessagesList?.appendChild(item);
       }
     }
 
@@ -237,11 +231,14 @@
       createPrivateChat(recipient);
 
       const privateMessagesList = document.getElementById(`privateMessages_${recipient}`);
+      if (!privateMessagesList) {
+        return;
+      }
       privateMessagesList.innerHTML = '';
       messages.forEach(msg => {
         const item = document.createElement('li');
         item.textContent = `${msg.sender}: ${msg.message}`;
-        privateMessagesList.appendChild(item);
+        privateMessagesList?.appendChild(item);
       });
     }
 
