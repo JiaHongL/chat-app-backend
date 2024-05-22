@@ -58,7 +58,7 @@ function connectWebSocket() {
 
 ### Client 送出訊息給 Server
 
-### 送出訊息 (general：公共聊天室)
+#### 送出訊息 (general：公共聊天室)
 
 ```javascript
 socket.send(JSON.stringify({
@@ -71,7 +71,7 @@ socket.send(JSON.stringify({
 }));
 ```
 
-### 已讀訊息 (general：公共聊天室)
+#### 已讀訊息 (general：公共聊天室)
 
 ```javascript
 socket.send(JSON.stringify({
@@ -83,7 +83,7 @@ socket.send(JSON.stringify({
 }));
 ```
 
-### 送出私人訊息
+#### 送出私人訊息
 
 ```javascript
 socket.send(JSON.stringify({
@@ -96,7 +96,7 @@ socket.send(JSON.stringify({
 }));
 ```
 
-### 已讀私人訊息
+#### 已讀私人訊息
 
 ```javascript
 socket.send(JSON.stringify({
@@ -111,7 +111,7 @@ socket.send(JSON.stringify({
 
 ### Client 接收 Server 訊息
 
-### 在線使用者
+#### 在線使用者
 
 ```javascript
 {
@@ -123,7 +123,7 @@ socket.send(JSON.stringify({
 ```
 > 當有使用者連接或斷開時，就會收到新的在線使用者的名單。
 
-### 接收公共聊天室的歷史訊息
+#### 接收公共聊天室的歷史訊息
 
 ```javascript
 {
@@ -153,7 +153,7 @@ socket.send(JSON.stringify({
 
 > 只會在第一次連接成功時，接收歷史訊息。
 
-### 接收私人訊息的歷史訊息
+#### 接收私人訊息的歷史訊息
 
 ```javascript
 {
@@ -178,7 +178,7 @@ socket.send(JSON.stringify({
 
 > 只會在第一次連接成功時，接收歷史訊息。
 
-### 接收新訊息
+#### 接收新訊息
 
 ```javascript
 {
@@ -193,7 +193,7 @@ socket.send(JSON.stringify({
 
 > 當有人在公共聊天室發送新訊息時，就會收到新訊息。
 
-### 接收新私人訊息
+#### 接收新私人訊息
 
 ```javascript
 {
@@ -208,7 +208,7 @@ socket.send(JSON.stringify({
 
 > 當有人在私人聊天室發送新訊息時，就會收到新訊息。
 
-### 未讀訊息數量 (公共聊天室)
+#### 未讀訊息數量 (公共聊天室)
 
 ```javascript
 {
@@ -224,7 +224,7 @@ socket.send(JSON.stringify({
 
 > 當有人在公共聊天室發送新訊息時，其他人就會收到未讀訊息的數量。
 
-### 未讀訊息數量（私人聊天室）
+#### 未讀訊息數量（私人聊天室）
 
 ```javascript
 {
