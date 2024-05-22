@@ -50,7 +50,7 @@
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
-      fetch('http://localhost:3000/users/login', {
+      fetch('http://localhost:3000/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -82,11 +82,14 @@
         console.log('Connected to server');
         document.getElementById('messageInput').disabled = false;
         socket.send(JSON.stringify({ event: 'joinRoom', data: 'general' }));
-        console.log('send joinRoom general');
+        console.log('send joinRoom general',{
+          event: 'joinRoom',
+          data: 'general'
+        });
       };
 
       socket.onmessage = (event) => {
-        console.log('message:', event.data);
+        console.log('receive message:', event.data);
         const message = JSON.parse(event.data);
         handleIncomingMessage(message);
       };

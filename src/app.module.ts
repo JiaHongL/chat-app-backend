@@ -10,7 +10,7 @@ import { join } from 'path';
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // 指向你的靜態文件目錄
-      exclude: ['/api*'], // 排除 /api 路徑，以保留 API 文檔
+      exclude: ['/api/docs*'], // 排除 /api/docs 路徑，以保留 API 文檔
     }),
     UserModule, 
     ChatModule
