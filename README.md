@@ -134,17 +134,20 @@ socket.send(JSON.stringify({
             {
                 "room":"general",
                 "message":"hi",
-                "sender":"joe"
+                "sender":"joe",
+                "date":"2024-05-22T18:49:57.811Z"
             },
             {
                 "room":"general",
                 "message":"hi hi!",
-                "sender":"john"
+                "sender":"john",
+                "date":"2024-05-22T18:51:50.811Z"
             },
             {
                 "room":"general",
                 "message":"hi hi ~",
-                "sender":"jane"
+                "sender":"jane",
+                "date":"2024-05-22T18:52:37.811Z"
             }
         ]
     }
@@ -164,11 +167,13 @@ socket.send(JSON.stringify({
             {
                 "to":"john",
                 "message":"hi john",
-                "sender":"joe"
+                "sender":"joe",
+                "date":"2024-05-22T18:49:57.811Z"
             },{
                 "to":"joe",
                 "message":"hihi",
-                "sender":"john"
+                "sender":"john",
+                "date":"2024-05-22T18:49:57.811Z"
             }]
         }
 }
@@ -186,7 +191,8 @@ socket.send(JSON.stringify({
     "data":{
         "room":"general",
         "message":"hi ~",
-        "sender":"joe"
+        "sender":"joe",
+        "date":"2024-05-22T18:49:57.811Z"
     }
 }
 ```
@@ -201,7 +207,8 @@ socket.send(JSON.stringify({
     "data":{
         "to":"john",
         "message":"hi!",
-        "sender":"joe"
+        "sender":"joe",
+        "date":"2024-05-22T18:49:57.811Z"
     }
 }
 ```

@@ -63,6 +63,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('message')
   handleMessage(@MessageBody() data: SendMessageDto, @ConnectedSocket() client: any) {
+    data.date = new Date().toISOString();
     this.server.clients.forEach((c: any) => {
       if (c['room'] === data.room) {
         c.send(JSON.stringify({ event: 'message', data }));
@@ -77,6 +78,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   
   @SubscribeMessage('privateMessage')
   handlePrivateMessage(@MessageBody() data: PrivateMessageDto, @ConnectedSocket() client: any) {
+    data.date = new Date().toISOString();
     const room = `private_${data.sender}_${data.to}`;
     const reverseRoom = `private_${data.to}_${data.sender}`;
   

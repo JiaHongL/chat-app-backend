@@ -26,6 +26,12 @@ export class SendMessageDto {
     description: 'The username of the sender',
   })
   sender: string;
+
+  @ApiProperty({
+    example: '2021-01-01T12:00:00.000Z',
+    description: 'The timestamp of the message',
+  })
+  date?: string;
 }
 
 export class PrivateMessageDto {
@@ -46,6 +52,12 @@ export class PrivateMessageDto {
     description: 'The username of the sender',
   })
   sender: string;
+
+  @ApiProperty({
+    example: '2021-01-01T12:00:00.000Z',
+    description: 'The timestamp of the message',
+  })
+  date?: string;
 }
 
 // 新增未讀訊息和已讀回執的 DTO
