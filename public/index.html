@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat Application</title>
+</head>
+<body>
+  <div>
+    <h1>Login</h1>
+    <select id="username">
+      <option value="joe">joe</option>
+      <option value="jane">jane</option>
+      <option value="john">john</option>
+      <option value="linda">linda</option>
+      <option value="david">david</option>
+    </select>
+    <input id="password" placeholder="Password" type="password" value="abc">
+    <button onclick="login()">Login</button>
+  </div>
+  <div>
+    <h1>JWT Token</h1>
+    <input id="tokenInput" placeholder="Enter JWT token...">
+    <button onclick="connectWebSocket()">Connect</button>
+  </div>
+  <div>
+    <h1>General Chat</h1>
+    <ul id="messages"></ul>
+    <input id="messageInput" placeholder="Enter message...">
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="markAsRead('general')">Mark as Read</button>
+  </div>
+  <div>
+    <h1>Private Chat</h1>
+    <input id="privateRecipient" placeholder="Recipient">
+    <div id="privateChats"></div>
+  </div>
+  <div>
+    <h1>Online Users</h1>
+    <ul id="onlineUsers"></ul>
+  </div>
+  <div>
+    <h1>Unread Messages</h1>
+    <div id="unreadMessages"></div>
+  </div>
+
+  <script>
+    let socket;
+
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      fetch('http://localhost:3000/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('tokenInput').value = data.token;
+        alert('Login successful');
+        connectWebSocket();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Login failed');
+      });
+    }
+
+    function connectWebSocket() {
+
+      if (socket) {
+        socket.close();
+      }
+
+      const token = document.getElementById('tokenInput').value;
+      socket = new WebSocket(`ws://localhost:3000?token=${token}`);
+
+      socket.onopen = () => {
+        console.log('Connected to server');
+        document.getElementById('messageInput').disabled = false;
+        socket.send(JSON.stringify({ event: 'joinRoom', data: 'general' }));
+        console.log('send joinRoom general');
+      };
+
+      socket.onmessage = (event) => {
+        console.log('message:', event.data);
+        const message = JSON.parse(event.data);
+        handleIncomingMessage(message);
+      };
+
+      socket.onclose = (event) => {
+        console.log('Disconnected from server', event);
+        document.getElementById('messageInput').disabled = true;
+        alert('Disconnected from server');
+      };
+
+      socket.onerror = (error) => {
+        console.log('WebSocket error', error);
+        alert('WebSocket error');
+      };
+    }
+
+    function handleIncomingMessage(message) {
+      if (message.event === 'messageHistory') {
+        if (message.data.room === 'general') {
+          const messagesList = document.getElementById('messages');
+          messagesList.innerHTML = '';
+          message.data.messages.forEach(msg => {
+            const item = document.createElement('li');
+            item.textContent = `${msg.sender}: ${msg.message}`;
+            messagesList.appendChild(item);
+          });
+        } else {
+          handlePrivateMessageHistory(message.data.room, message.data.messages);
+        }
+      } else if (message.event === 'message') {
+        const item = document.createElement('li');
+        item.textContent = `${message.data.sender}: ${message.data.message}`;
+        document.getElementById('messages').appendChild(item);
+      } else if (message.event === 'privateMessage') {
+        handlePrivateMessage(message.data);
+      } else if (message.event === 'onlineUsers') {
+        const onlineUsersList = document.getElementById('onlineUsers');
+        onlineUsersList.innerHTML = '';
+        message.data.users.forEach(user => {
+          const item = document.createElement('li');
+          item.textContent = user;
+          onlineUsersList.appendChild(item);
+        });
+      } else if (message.event === 'unreadMessages') {
+        updateUnreadMessages(message.data.room, message.data.count);
+      }
+    }
+
+    function sendMessage() {
+      const message = document.getElementById('messageInput').value;
+      socket.send(JSON.stringify({ event: 'message', data: { room: 'general', message, sender: document.getElementById('username').value } }));
+      console.log('send message:', {
+        event: 'message',
+        data: { room: 'general', message, sender: document.getElementById('username').value }
+      });
+    }
+
+    function sendPrivateMessage(to) {
+      const message = document.getElementById(`privateMessageInput_${to}`).value;
+      socket.send(JSON.stringify({ event: 'privateMessage', data: { to, message, sender: document.getElementById('username').value } }));
+      console.log('send privateMessage:', {
+        event: 'privateMessage',
+        data: { to, message, sender: document.getElementById('username').value }
+      });
+    }
+
+    function markAsRead(type, recipient) {
+      let room = 'general';
+      if (type === 'private') {
+        const username = document.getElementById('username').value;
+        room = `private_${recipient}_${username}`;
+      }
+      socket.send(JSON.stringify({ event: 'markAsRead', data: { room, type } }));
+      console.log('send markAsRead:', {
+        event: 'markAsRead',
+        data: { room, type }
+      });
+    }
+
+    function updateUnreadMessages(room, count) {
+      const unreadMessagesDiv = document.getElementById('unreadMessages');
+      let existingMessageDiv = document.getElementById(`unread_${room}`);
+      if (existingMessageDiv) {
+        existingMessageDiv.innerText = `Unread messages in ${room}: ${count}`;
+      } else {
+        existingMessageDiv = document.createElement('div');
+        existingMessageDiv.id = `unread_${room}`;
+        existingMessageDiv.innerText = `Unread messages in ${room}: ${count}`;
+        unreadMessagesDiv.appendChild(existingMessageDiv);
+      }
+    }
+
+    function createPrivateChat(recipient) {
+      const username = document.getElementById('username').value;
+      if (recipient === username) {
+        return;
+      }
+
+      if (!document.getElementById(`chat_${recipient}`)) {
+        const privateChatsDiv = document.getElementById('privateChats');
+        const chatDiv = document.createElement('div');
+        chatDiv.id = `chat_${recipient}`;
+        chatDiv.innerHTML = `
+          <h2>Chat with ${recipient}</h2>
+          <ul id="privateMessages_${recipient}"></ul>
+          <input id="privateMessageInput_${recipient}" placeholder="Enter message...">
+          <button onclick="sendPrivateMessage('${recipient}')">Send</button>
+          <button onclick="markAsRead('private', '${recipient}')">Mark as Read</button>
+        `;
+        privateChatsDiv.appendChild(chatDiv);
+      }
+    }
+
+    function handlePrivateMessage(data) {
+      const { sender, to, message } = data;
+      const username = document.getElementById('username').value;
+      const recipient = (username === sender) ? to : sender;
+
+      if (recipient !== username && !document.getElementById(`chat_${recipient}`)) {
+        createPrivateChat(recipient);
+      }
+
+      if (recipient !== username) {
+        const privateMessagesList = document.getElementById(`privateMessages_${recipient}`);
+        const item = document.createElement('li');
+        item.textContent = `${sender}: ${message}`;
+        privateMessagesList.appendChild(item);
+      }
+    }
+
+    function handlePrivateMessageHistory(room, messages) {
+      const recipient = room.split('_')[2];
+      createPrivateChat(recipient);
+
+      const privateMessagesList = document.getElementById(`privateMessages_${recipient}`);
+      privateMessagesList.innerHTML = '';
+      messages.forEach(msg => {
+        const item = document.createElement('li');
+        item.textContent = `${msg.sender}: ${msg.message}`;
+        privateMessagesList.appendChild(item);
+      });
+    }
+
+    document.getElementById('privateRecipient').addEventListener('change', (event) => {
+      const recipient = event.target.value;
+      if (!document.getElementById(`chat_${recipient}`)) {
+        createPrivateChat(recipient);
+      }
+    });
+  </script>
+</body>
+</html>
