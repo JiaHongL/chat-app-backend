@@ -6,6 +6,7 @@ interface User {
   username: string;
   password: string;
   status: 'online' | 'offline';
+  avatar?: string;
 }
 
 @Injectable()
@@ -14,27 +15,32 @@ export class UserService {
     {
       username: 'joe',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
-      status: 'offline'
+      status: 'offline',
+      avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=joe'
     },
     {
       username: 'jane',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
-      status: 'offline'
+      status: 'offline',
+      avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=jane'
     },
     {
       username: 'john',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
-      status: 'offline'
+      status: 'offline',
+      avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=john'
     },
     {
       username: 'linda',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
-      status: 'offline'
+      status: 'offline',
+      avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=linda'
     },
     {
       username: 'david',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
-      status: 'offline'
+      status: 'offline',
+      avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=david'
     }
   ];
 
@@ -42,7 +48,12 @@ export class UserService {
 
   async register(username: string, password: string): Promise<void> {
     const hashedPassword = await bcrypt.hash(password, 10);
-    this.users.push({ username, password: hashedPassword, status: 'offline' });
+    this.users.push({ 
+      username, 
+      password: hashedPassword, 
+      status: 'offline',
+      avatar: `https://api.dicebear.com/8.x/pixel-art/svg?seed=${username}` 
+    });
   }
 
   async login(username: string, password: string): Promise<string> {

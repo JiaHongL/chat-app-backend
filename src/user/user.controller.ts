@@ -13,6 +13,8 @@ export class UserInfoDto {
   "username": string;
   @ApiProperty()
   "status": string
+  @ApiProperty()
+  "avatar": string;
 }
 
 @ApiTags('users')
@@ -63,6 +65,7 @@ export class UserController {
     return {
       username: user.username,
       status: user.status,
+      avatar: user.avatar
     };
   }
 
@@ -78,7 +81,11 @@ export class UserController {
   @Get()
   async getUsers() {
     const users = await this.userService.getAllUsers();
-    return users.map(user => ({ username: user.username, status: user.status }));
+    return users.map(user => ({ 
+      username: user.username, 
+      status: user.status,
+      avatar: user.avatar 
+    }));
   }
 
 }
