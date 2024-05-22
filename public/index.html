@@ -45,12 +45,18 @@
 
   <script>
     let socket;
+    let isOnRender = window.location.href.includes('onrender.com');
 
     function login() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
-      fetch('http://localhost:3000/api/users/login', {
+      let loginUrl = 'http://localhost:3000/api/users/login';
+      if (isOnRender) {
+        loginUrl = 'https://chat-app-backend-t7ug.onrender.com/api/users/login';
+      }
+
+      fetch(loginUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -76,7 +82,13 @@
       }
 
       const token = document.getElementById('tokenInput').value;
-      socket = new WebSocket(`ws://localhost:3000?token=${token}`);
+
+      let wsUrl = 'ws://localhost:3000';
+      if (isOnRender) {
+        wsUrl = 'wss://chat-app-backend-t7ug.onrender.com';
+      }
+
+      socket = new WebSocket(`${wsUrl}?token=${token}`);
 
       socket.onopen = () => {
         console.log('Connected to server');
