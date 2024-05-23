@@ -19,7 +19,7 @@ async function bootstrap() {
       'http://localhost:8080',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Accept',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   }); // 啟用跨域請求
 
   app.useWebSocketAdapter(new WsAdapter(app));
