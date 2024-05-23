@@ -246,3 +246,14 @@ socket.send(JSON.stringify({
 > 可用來顯示未讀數量，private_{data.sender}_{data.to} 為私人聊天室的名稱，joe 有來至 john 的 5 個未讀訊息。
 
 > 當有人在私人聊天室發送新訊息時，就會收到未讀訊息的數量。
+
+#### 通知需要更新使用者列表
+
+```javascript
+{
+    "event":"updateUserList",
+    "data":""
+}
+```
+
+> 當有人註冊成功後，就會通知全部的人需更新使用者列表。

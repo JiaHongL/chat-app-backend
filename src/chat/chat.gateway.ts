@@ -3,6 +3,8 @@ import { Server } from 'ws';
 import { UserService } from '../user/user.service';
 import { ApiTags, ApiExtraModels } from '@nestjs/swagger';
 import { SendMessageDto, PrivateMessageDto, MarkAsReadDto} from './websocket-docs';
+import { NotificationService } from 'src/notification/notification.service';
+
 
 @ApiTags('chat')
 @ApiExtraModels(SendMessageDto, PrivateMessageDto, MarkAsReadDto)
@@ -21,16 +23,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private unreadMessages = {};
 
   constructor(
-    private userService: UserService
-  ) {}
+    private userService: UserService,
+    private notificationService: NotificationService
+  ) {
+    this.notificationService.notification$.subscribe(message => {
+      if (message ==='updateUserList') {
+        this.server.clients.forEach(client => {
+          client.send(JSON.stringify({ event: 'updateUserList', data: '' }));
+        });
+      }
+    });
+  }
 
   async handleConnection(client: any, req: any) {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
       const token = url.searchParams.get('token');
       const decoded = this.userService.verifyToken(token);
+      await this.userService.autoLogin(token);
       const user = await this.userService.findByUsername(decoded.username);
       client['username'] = user.username;
+
+      console.log(`User ${user.username} connected`);
 
       // 發送一般聊天歷史
       client.send(JSON.stringify({ event: 'messageHistory', data: { room: 'general', messages: this.messageHistory.general } }));
@@ -55,6 +69,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: any) {
     const username = client['username'];
+    console.log(`User ${username} disconnected`);
     if (username) {
       await this.userService.logout(username);
       this.updateOnlineUsers();

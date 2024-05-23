@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { NotificationService } from 'src/notification/notification.service';
 
 interface User {
   username: string;
@@ -44,7 +45,10 @@ export class UserService {
     }
   ];
 
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private notificationService: NotificationService
+  ) {}
 
   async register(username: string, password: string): Promise<void> {
     if (!username || !password) {
@@ -60,7 +64,7 @@ export class UserService {
       status: 'offline',
       avatar: `https://api.dicebear.com/8.x/pixel-art/svg?seed=${username}` 
     });
-
+    this.notificationService.notify('updateUserList');
   }
 
   async login(username: string, password: string): Promise<string> {
@@ -70,6 +74,16 @@ export class UserService {
       return this.jwtService.sign({ username });
     }
     throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+  }
+
+  async autoLogin(token: string): Promise<string> {
+    const { username } = this.verifyToken(token);
+    const user = this.users.find(u => u.username === username);
+    if (user) {
+      user.status = 'online';
+      return token;
+    }
+    throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
   }
 
   async logout(username: string): Promise<void> {
