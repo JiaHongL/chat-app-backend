@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
@@ -47,6 +47,12 @@ export class UserService {
   constructor(private jwtService: JwtService) {}
 
   async register(username: string, password: string): Promise<void> {
+    if (!username || !password) {
+      throw new HttpException('Invalid input', HttpStatus.BAD_REQUEST);
+    }
+    if (this.users.find(u => u.username === username)) {
+      throw new HttpException('User already exists', HttpStatus.CONFLICT);
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     this.users.push({ 
       username, 
@@ -54,6 +60,7 @@ export class UserService {
       status: 'offline',
       avatar: `https://api.dicebear.com/8.x/pixel-art/svg?seed=${username}` 
     });
+
   }
 
   async login(username: string, password: string): Promise<string> {
@@ -62,7 +69,7 @@ export class UserService {
       user.status = 'online';
       return this.jwtService.sign({ username });
     }
-    throw new Error('Invalid credentials');
+    throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
   }
 
   async logout(username: string): Promise<void> {

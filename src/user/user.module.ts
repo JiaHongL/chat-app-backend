@@ -8,7 +8,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
   imports: [
     JwtModule.register({
       secret: 'your_jwt_secret', // 替換為你的 JWT 秘鑰
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: null }, // JWT 有效期限，null 表示永不過期
     }),
   ],
   controllers: [UserController],
