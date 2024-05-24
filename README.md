@@ -111,6 +111,19 @@ socket.send(JSON.stringify({
 
 ### Client 接收 Server 訊息
 
+#### 第一次連接成功，且傳送完成相關初始化資料
+
+```javascript
+{ 
+    "event": 'initializationComplete', 
+    "data": { 
+        message: 'Relevant initialization data has been sent' 
+    } 
+}
+```
+
+> 若架設在雲端後，回傳送度較慢時，可以在前端等待這個訊息後再進行其他操作。
+
 #### 在線使用者
 
 ```javascript

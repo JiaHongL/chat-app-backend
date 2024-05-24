@@ -68,6 +68,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // 更新在線用戶列表
       this.updateOnlineUsers();
+
+      setTimeout(() => {
+        // 通知客戶端連接成功
+        client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));        
+      });
     } catch (error) {
       client.close();
     }
