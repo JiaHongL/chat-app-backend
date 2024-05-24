@@ -42,6 +42,30 @@ export class UserService {
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=david'
+    },
+    {
+      username: 'jessica',
+      password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
+      status: 'offline',
+      avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=jessica'
+    },
+    {
+      username: 'amanda',
+      password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
+      status: 'offline',
+      avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=amanda'
+    },
+    {
+      username: 'emily',
+      password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
+      status: 'offline',
+      avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=emily'
+    },
+    {
+      username: 'jason',
+      password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
+      status: 'offline',
+      avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=jason'
     }
   ];
 
