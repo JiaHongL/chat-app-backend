@@ -70,7 +70,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleDisconnect(client: any) {
     const username = client['username'];
     console.log(`User ${username} disconnected`);
-    if (username) {
+    // 檢查是否有用戶在線 (同時登入多個網頁)
+    let online = false;
+    this.server.clients.forEach(c => {
+      if (c['username'] === username) {
+        online = true;
+      }
+    });
+    if (!online) {
       await this.userService.logout(username);
       this.updateOnlineUsers();
     }

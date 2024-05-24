@@ -16,6 +16,7 @@
     </select>
     <input id="password" placeholder="Password" type="password" value="abc">
     <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
   </div>
   <div>
     <h1>JWT Token</h1>
@@ -46,6 +47,10 @@
     let socket;
     let isOnRender = window.location.href.includes('onrender.com');
 
+    function logout() {
+      window.location.reload();
+    }
+
     function login() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
@@ -65,7 +70,6 @@
       .then(response => response.json())
       .then(data => {
         document.getElementById('tokenInput').value = data.token;
-        alert('Login successful');
         connectWebSocket();
       })
       .catch(error => {
@@ -103,12 +107,10 @@
       socket.onclose = (event) => {
         console.log('Disconnected from server', event);
         document.getElementById('messageInput').disabled = true;
-        alert('Disconnected from server');
       };
 
       socket.onerror = (error) => {
         console.log('WebSocket error', error);
-        alert('WebSocket error');
       };
     }
 
