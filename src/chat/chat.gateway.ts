@@ -131,22 +131,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.messageHistory[reverseRoomDate.room].push(reverseRoomDate);
     }
 
+    // 自己傳給自己的訊息不計算未讀訊息數量
+    if (data.sender === data.to) {
+      client.send(JSON.stringify({ event: 'privateMessage', data: roomData }));
+      return;
+    }
+
     let receiverConnected = false;
 
     this.server.clients.forEach((c: any) => {
       if (c['username'] === data.to) { // 如果接收者連接
         receiverConnected = true;
         c.send(JSON.stringify({ event: 'privateMessage', data: roomData }));
+        c.send(JSON.stringify({ event: 'privateMessage', data: reverseRoomDate }));
         this.updateUnreadCount(roomData.room, data.sender, data.to);
       } else if (c['username'] === data.sender) {
+        c.send(JSON.stringify({ event: 'privateMessage', data: roomData }));
         c.send(JSON.stringify({ event: 'privateMessage', data: reverseRoomDate }));
       }
     });
-
-    // 自己傳給自己的訊息不計算未讀訊息數量
-    if (data.sender === data.to) {
-      return;
-    }
 
     // 如果接收者未連接，更新未讀訊息數量
     if (!receiverConnected) {
