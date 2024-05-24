@@ -64,7 +64,14 @@ export class UserService {
       status: 'offline',
       avatar: `https://api.dicebear.com/8.x/pixel-art/svg?seed=${username}` 
     });
-    this.notificationService.notify('updateUserList');
+    this.notificationService.notify({
+      event: 'updateUserList',
+      data: this.users.map(u => ({ 
+        username: u.username, 
+        status: u.status,
+        avatar: u.avatar 
+      }))
+    });
   }
 
   async login(username: string, password: string): Promise<string> {

@@ -2,14 +2,14 @@ import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnectio
 import { Server } from 'ws';
 import { UserService } from '../user/user.service';
 import { ApiTags, ApiExtraModels } from '@nestjs/swagger';
-import { SendMessageDto, PrivateMessageDto, MarkAsReadDto} from './websocket-docs';
+import { SendMessageDto, PrivateMessageDto, MarkAsReadDto } from './websocket-docs';
 import { NotificationService } from 'src/notification/notification.service';
 
 
 @ApiTags('chat')
 @ApiExtraModels(SendMessageDto, PrivateMessageDto, MarkAsReadDto)
-@WebSocketGateway({ 
-  server: true 
+@WebSocketGateway({
+  server: true
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -27,11 +27,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private notificationService: NotificationService
   ) {
     this.notificationService.notification$.subscribe(message => {
-      if (message ==='updateUserList') {
-        this.server.clients.forEach(client => {
-          client.send(JSON.stringify({ event: 'updateUserList', data: '' }));
-        });
-      }
+      this.server.clients.forEach(client => {
+        client.send(JSON.stringify(message));
+      });
     });
   }
 
@@ -48,7 +46,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // 發送一般聊天歷史
       client.send(JSON.stringify({ event: 'messageHistory', data: { room: 'general', messages: this.messageHistory.general } }));
-      
+
       // 發送未讀消息數量
       client.send(JSON.stringify({ event: 'unreadMessages', data: { room: 'general', count: this.getUnreadCount('general', client['username']) } }));
 
@@ -89,7 +87,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.clients.forEach((c: any) => {
       if (c['room'] === data.room) {
         c.send(JSON.stringify({ event: 'message', data }));
-      }else if(data.room === 'general') {
+      } else if (data.room === 'general') {
         c.send(JSON.stringify({ event: 'message', data }));
       }
     });
@@ -97,38 +95,54 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.messageHistory[data.room].push(data);
     this.updateUnreadCount(data.room, data.sender);
   }
-  
+
   @SubscribeMessage('privateMessage')
   handlePrivateMessage(@MessageBody() data: PrivateMessageDto, @ConnectedSocket() client: any) {
     data.date = new Date().toISOString();
-    const room = `private_${data.sender}_${data.to}`;
-    const reverseRoom = `private_${data.to}_${data.sender}`;
-  
-    if (!this.messageHistory[room]) {
-      this.messageHistory[room] = [];
+
+    let roomData = JSON.parse(JSON.stringify(data)); // 用戶的房間
+    roomData.room = `private_${data.sender}_${data.to}`;
+
+    let reverseRoomDate = JSON.parse(JSON.stringify(data));  // 對方的房間
+    reverseRoomDate.room = `private_${data.to}_${data.sender}`;
+
+    if (!this.messageHistory[roomData.room]) { // 如果房間不存在，則創建一個新的
+      this.messageHistory[roomData.room] = [];
     }
-    if (!this.messageHistory[reverseRoom]) {
-      this.messageHistory[reverseRoom] = [];
+
+    if (!this.messageHistory[reverseRoomDate.reverseRoom]) { // 如果房間不存在，則創建一個新的
+      this.messageHistory[reverseRoomDate.room] = [];
     }
-  
-    this.messageHistory[room].push(data);
-    this.messageHistory[reverseRoom].push(data);
-  
+
+    if (
+      data.sender === data.to
+    ) { // 如果發送者和接收者是同一個人
+      this.messageHistory[roomData.room].push(roomData);
+    } else {
+      this.messageHistory[roomData.room].push(roomData);
+      this.messageHistory[reverseRoomDate.room].push(reverseRoomDate);
+    }
+
     let receiverConnected = false;
-  
+
     this.server.clients.forEach((c: any) => {
-      if (c['username'] === data.to) {
+      if (c['username'] === data.to) { // 如果接收者連接
         receiverConnected = true;
-        c.send(JSON.stringify({ event: 'privateMessage', data }));
-        this.updateUnreadCount(room, data.sender, data.to);
+        c.send(JSON.stringify({ event: 'privateMessage', data: roomData }));
+        this.updateUnreadCount(roomData.room, data.sender, data.to);
       } else if (c['username'] === data.sender) {
-        c.send(JSON.stringify({ event: 'privateMessage', data }));
+        c.send(JSON.stringify({ event: 'privateMessage', data: reverseRoomDate }));
       }
     });
-  
+
+    // 自己傳給自己的訊息不計算未讀訊息數量
+    if (data.sender === data.to) {
+      return;
+    }
+
     // 如果接收者未連接，更新未讀訊息數量
     if (!receiverConnected) {
-      this.updateUnreadCount(room, data.sender, data.to);
+      this.updateUnreadCount(roomData.room, roomData.sender, roomData.to);
     }
   }
 
@@ -140,20 +154,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.unreadMessages[room][username] = 0;
     }
 
+    if (type === 'general'){
+      client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, username) } }));
+    }
+
     if (type === 'private') {
       this.server.clients.forEach((c: any) => {
         if (c['username'] === username) {
           c.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, username) } }));
         }
       });
+    } 
 
-    } else {
-      this.server.clients.forEach((c: any) => {
-        if (c['room'] === room) {
-          c.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, c['username']) } }));
-        }
-      });
-    }
   }
 
   private getUnreadCount(room: string, username: string): number {
@@ -164,6 +176,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private async updateUnreadCount(room: string, sender: string, receiver?: string) {
+
+    if(sender === receiver) { // 如果發送者和接收者是同一個人，不計算未讀訊息數量
+      return;
+    }
 
     if (!this.unreadMessages[room]) {
       this.unreadMessages[room] = {};

@@ -58,6 +58,12 @@ export class PrivateMessageDto {
     description: 'The timestamp of the message',
   })
   date?: string;
+
+  @ApiProperty({
+    example: 'private_john_jane',
+    description: 'The name of the private chat room',
+  })
+  room?: string;
 }
 
 // 新增未讀訊息和已讀回執的 DTO

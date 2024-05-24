@@ -165,11 +165,13 @@ socket.send(JSON.stringify({
         "room":"private_john_joe",
         "messages":[
             {
+                "room":"private_john_joe",
                 "to":"john",
                 "message":"hi john",
                 "sender":"joe",
                 "date":"2024-05-22T18:49:57.811Z"
             },{
+                "room":"private_john_joe",
                 "to":"joe",
                 "message":"hihi",
                 "sender":"john",
@@ -205,9 +207,10 @@ socket.send(JSON.stringify({
 {
     "event":"privateMessage",
     "data":{
-        "to":"john",
+        "room":"private_john_joe",
+        "to":"joe",
         "message":"hi!",
-        "sender":"joe",
+        "sender":"john",
         "date":"2024-05-22T18:49:57.811Z"
     }
 }
@@ -247,13 +250,43 @@ socket.send(JSON.stringify({
 
 > 當有人在私人聊天室發送新訊息時，就會收到未讀訊息的數量。
 
+> 若是自己傳給自己的訊息，就不會收到未讀訊息的數量。 
+
 #### 通知需要更新使用者列表
 
 ```javascript
 {
     "event":"updateUserList",
-    "data":""
+    "data": [{
+        username: "joe",
+        online: true
+        avatar: "https://www.example.com/avatar.jpg"
+    },{
+        username: "john",
+        online: false
+        avatar: "https://www.example.com/avatar.jpg"
+    },{
+        username: "jane",
+        online: true
+        avatar: "https://www.example.com/avatar.jpg"
+    },{
+        username: "jack",
+        online: false
+        avatar: "https://www.example.com/avatar.jpg"
+    }]
 }
 ```
 
-> 當有人註冊成功後，就會通知全部的人需更新使用者列表。
+> 當有人註冊成功後，就會通知全部的人需更新使用者列表，且會重送新的使用者列表。
+
+#### 其他
+
+- 公共聊天室的 room 固定為 general。
+- private_{data.sender}_{data.to} 為私人聊天室，data.sender 為發送者，data.to 為接收者。
+- 情境：joe 是登入者，當 joe 傳給 john 的訊息時
+  - 會建立 private_joe_john 的聊天室，和 private_john_joe 兩個聊天室。
+  - 而 john 會收到 unreadMessages 為 { "room":"private_joe_john", "count": 1 }，意思是 john 收到一個 joe 的訊息，但還未讀。
+  - 左側訊息通知列點擊後，room 為 private_xxx_joe，意思為接收別人傳過來的聊天室。
+  - 右側上下線列表點擊後，room 為 private_joe_xxx，意思為傳送給別人訊息的聊天室。
+- 情境：當 joe 傳給 joe，自己傳給自己時。
+  - 會直接當做已讀，不會傳送 unreadMessages。

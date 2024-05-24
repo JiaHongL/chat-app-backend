@@ -52,6 +52,11 @@
     }
 
     function login() {
+
+      if (socket) {
+        socket.close();
+      }
+
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
@@ -192,10 +197,6 @@
 
     function createPrivateChat(recipient) {
       const username = document.getElementById('username').value;
-      if (recipient === username) {
-        return;
-      }
-
       if (!document.getElementById(`chat_${recipient}`)) {
         const privateChatsDiv = document.getElementById('privateChats');
         const chatDiv = document.createElement('div');
