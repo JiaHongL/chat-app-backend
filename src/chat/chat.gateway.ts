@@ -27,6 +27,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private notificationService: NotificationService
   ) {
     this.notificationService.notification$.subscribe(message => {
+      if(message.event === 'resetData') {
+        this.messageHistory = {
+          general: [],
+          privateMessages: {}
+        };
+        this.unreadMessages = {};
+        return;
+      }
       this.server.clients.forEach(client => {
         client.send(JSON.stringify(message));
       });

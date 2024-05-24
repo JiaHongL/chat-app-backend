@@ -88,5 +88,13 @@ export class UserController {
     }));
   }
 
+  @ApiOperation({ summary: '伺服器資料還原' })
+  @ApiResponse({ status: 200, description: 'Server data reset successfully' })
+  @Get('reset')
+  async reset() {
+    await this.userService.reset();
+    return { message: 'User registered successfully' };
+  }
+
 }
 

@@ -12,7 +12,7 @@ interface User {
 
 @Injectable()
 export class UserService {
-  private users: User[] = [
+  private mockUsers: User[] = [
     {
       username: 'joe',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
@@ -67,7 +67,8 @@ export class UserService {
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=jason'
     }
-  ];
+  ]
+  private users: User[] = JSON.parse(JSON.stringify(this.mockUsers));
 
   constructor(
     private jwtService: JwtService,
@@ -134,6 +135,14 @@ export class UserService {
 
   async getAllUsers(): Promise<User[]> {
     return this.users;
+  }
+
+  reset() {
+    this.users = JSON.parse(JSON.stringify(this.mockUsers));
+    this.notificationService.notify({
+      event: 'resetData',
+      data: ''
+    });
   }
 
   verifyToken(token: any): any {
