@@ -70,6 +70,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       setTimeout(() => {
         // 通知客戶端連接成功
         client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));
+        console.log('=================================================================================');
         console.log('>> this.messageHistory', this.messageHistory);
         console.log('>> this.unreadMessages', this.unreadMessages);        
       });
@@ -97,6 +98,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('message')
   handleMessage(@MessageBody() data: SendMessageDto, @ConnectedSocket() client: any) {
+    console.log('=================================================================================');
+    console.log('>> handleMessage data', data);
     data.date = new Date().toISOString();
     this.server.clients.forEach((c: any) => {
       if (c['room'] === data.room) {
@@ -108,10 +111,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.messageHistory[data.room] = this.messageHistory[data.room] || [];
     this.messageHistory[data.room].push(data);
     this.updateUnreadCount(data.room, data.sender);
+    console.log('>> handleMessage messageHistory', this.messageHistory);
   }
 
   @SubscribeMessage('privateMessage')
   handlePrivateMessage(@MessageBody() data: PrivateMessageDto, @ConnectedSocket() client: any) {
+    console.log('=================================================================================');
+    console.log('>> handlePrivateMessage data', data);
     data.date = new Date().toISOString();
 
     let roomData = JSON.parse(JSON.stringify(data)); // 用戶的房間
@@ -124,10 +130,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.messageHistory[roomData.room] = [];
     }
 
-    console.log('find reverseRoomData.room', reverseRoomData.room);
     if (!this.messageHistory[reverseRoomData.room]) { // 如果房間不存在，則創建一個新的
       this.messageHistory[reverseRoomData.room] = [];
-      console.log('create reverseRoomDate.room');
     }
 
     if (
@@ -138,6 +142,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.messageHistory[roomData.room].push(roomData);
       this.messageHistory[reverseRoomData.room].push(reverseRoomData);
     }
+
+    console.log('>> handlePrivateMessage messageHistory', this.messageHistory);
 
     // 自己傳給自己的訊息不計算未讀訊息數量
     if (data.sender === data.to) {
@@ -167,6 +173,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('markAsRead')
   handleMarkAsRead(@MessageBody() data: MarkAsReadDto, @ConnectedSocket() client: any) {
+    console.log('=================================================================================');
+    console.log('>> handleMarkAsRead data', data);
     const { room, type } = data;
     const username = client['username'];
     if (this.unreadMessages[room]) {
@@ -184,7 +192,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
       });
     } 
-
+    console.log('>> handleMarkAsRead unreadMessages', this.unreadMessages);
   }
 
   private getUnreadCount(room: string, username: string): number {
