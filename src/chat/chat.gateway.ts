@@ -16,8 +16,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private messageHistory = {
-    general: [],
-    privateMessages: {}
+    general: []
   };
 
   private unreadMessages = {};
@@ -29,8 +28,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.notificationService.notification$.subscribe(message => {
       if(message.event === 'resetData') {
         this.messageHistory = {
-          general: [],
-          privateMessages: {}
+          general: []
         };
         this.unreadMessages = {};
         return;
@@ -71,8 +69,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       setTimeout(() => {
         // 通知客戶端連接成功
-        client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));        
+        client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));
+        console.log('>> this.messageHistory', this.messageHistory);
+        console.log('>> this.unreadMessages', this.unreadMessages);        
       });
+
     } catch (error) {
       client.close();
     }
@@ -116,15 +117,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     let roomData = JSON.parse(JSON.stringify(data)); // 用戶的房間
     roomData.room = `private_${data.sender}_${data.to}`;
 
-    let reverseRoomDate = JSON.parse(JSON.stringify(data));  // 對方的房間
-    reverseRoomDate.room = `private_${data.to}_${data.sender}`;
+    let reverseRoomData = JSON.parse(JSON.stringify(data));  // 對方的房間
+    reverseRoomData.room = `private_${data.to}_${data.sender}`;
 
     if (!this.messageHistory[roomData.room]) { // 如果房間不存在，則創建一個新的
       this.messageHistory[roomData.room] = [];
     }
 
-    if (!this.messageHistory[reverseRoomDate.reverseRoom]) { // 如果房間不存在，則創建一個新的
-      this.messageHistory[reverseRoomDate.room] = [];
+    console.log('find reverseRoomData.room', reverseRoomData.room);
+    if (!this.messageHistory[reverseRoomData.room]) { // 如果房間不存在，則創建一個新的
+      this.messageHistory[reverseRoomData.room] = [];
+      console.log('create reverseRoomDate.room');
     }
 
     if (
@@ -133,7 +136,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.messageHistory[roomData.room].push(roomData);
     } else {
       this.messageHistory[roomData.room].push(roomData);
-      this.messageHistory[reverseRoomDate.room].push(reverseRoomDate);
+      this.messageHistory[reverseRoomData.room].push(reverseRoomData);
     }
 
     // 自己傳給自己的訊息不計算未讀訊息數量
@@ -148,11 +151,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (c['username'] === data.to) { // 如果接收者連接
         receiverConnected = true;
         c.send(JSON.stringify({ event: 'privateMessage', data: roomData }));
-        c.send(JSON.stringify({ event: 'privateMessage', data: reverseRoomDate }));
+        c.send(JSON.stringify({ event: 'privateMessage', data: reverseRoomData }));
         this.updateUnreadCount(roomData.room, data.sender, data.to);
       } else if (c['username'] === data.sender) {
         c.send(JSON.stringify({ event: 'privateMessage', data: roomData }));
-        c.send(JSON.stringify({ event: 'privateMessage', data: reverseRoomDate }));
+        c.send(JSON.stringify({ event: 'privateMessage', data: reverseRoomData }));
       }
     });
 
