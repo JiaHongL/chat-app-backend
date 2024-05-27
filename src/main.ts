@@ -5,6 +5,7 @@ import { JoinRoomDto, SendMessageDto, PrivateMessageDto, MarkAsReadDto } from '.
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { WsAdapter } from '@nestjs/platform-ws';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -46,6 +47,9 @@ async function bootstrap() {
   });
 
   app.useStaticAssets(join(__dirname, '..', 'public'));
+
+  app.use(bodyParser.json({ limit: '500mb' }));
+  app.use(bodyParser.urlencoded({ limit: '500mb', extended: true }));
 
   await app.listen(3000);
   console.log(`Application is running on: ${await app.getUrl()}`);
