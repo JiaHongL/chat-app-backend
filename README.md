@@ -9,13 +9,20 @@
 [swapper](https://chat-app-backend-t7ug.onrender.com/api/docs)  
 [chat-app-test-page](https://chat-app-backend-t7ug.onrender.com)
 
-## 已實現前端專案
+## 已實現的前端專案
 
-## 推薦文章與參考範例
+| 框架 | 專案 |
+| -------- | -------- |
+| Angular + @ngrx/signals | [ng-chat-app](https://github.com/JiaHongL/ng-chat-app)  | 
 
-| 框架 | 推薦文章 | 實作功能 |
-| -------- | -------- | -------- |
-| Angular + @ngrx/signals | [ng-chat-app](https://github.com/JiaHongL/ng-chat-app)  |  - 一隊醫|
+### 前端實現功能
+- 大廳聊天室功能 (一對多)
+- 私訊功能 (一對一)
+- 上線 / 離線 的狀態顯示
+- 未讀訊息數量提示
+- 已讀功能 / 已讀數量提示
+
+![alt text](image.png)
 
 ## 下載與啟動專案
 
