@@ -64,22 +64,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client['username'] = user.username;
 
       // 發送大廳未讀消息數量
-      client.send(JSON.stringify({ event: 'unreadMessages', data: { room: 'general', count: this.getUnreadCount('general', client['username']) } }));
+      setTimeout(() => {
+        client.send(JSON.stringify({ event: 'unreadMessages', data: { room: 'general', count: this.getUnreadCount('general', client['username']) } }));
+      });
 
       // 發送大廳聊天室的每個人的未讀消息資訊
-      client.send(JSON.stringify({ event: 'generalUnReadInfo', data: this.unreadMessages['general']||{}}));
+      setTimeout(() => {
+        client.send(JSON.stringify({ event: 'generalUnReadInfo', data: this.unreadMessages['general']||{}}));
+      })
 
       // 發送私人訊息歷史和未讀數量
       Object.keys(this.messageHistory).forEach(room => {
         if (room.startsWith('private_') && room.includes(user.username)) {
-          client.send(JSON.stringify({ event: 'messageHistory', data: { room, messages: this.messageHistory[room] } }));
-          const receiver = room.split('_')[2];
-          client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, receiver) } }));
+          setTimeout(() => {
+            client.send(JSON.stringify({ event: 'messageHistory', data: { room, messages: this.messageHistory[room] } }));
+            const receiver = room.split('_')[2];
+            client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, receiver) } }));
+          })
         }
       });
 
       // 更新在線用戶列表
-      this.updateOnlineUsers();
+      setTimeout(() => {
+        this.updateOnlineUsers();
+      });
 
       // 發送大廳聊天歷史
       setTimeout(() => {
