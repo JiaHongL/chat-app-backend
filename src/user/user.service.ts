@@ -68,12 +68,19 @@ export class UserService {
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=jason'
     }
   ]
-  private users: User[] = JSON.parse(JSON.stringify(this.mockUsers));
+  users: User[] = JSON.parse(JSON.stringify(this.mockUsers));
 
   constructor(
     private jwtService: JwtService,
     private notificationService: NotificationService
-  ) {}
+  ) {
+    this.notificationService.notification$.subscribe(message => {
+      if (message.event === 'ImportChatData') {
+        this.users = message.data.users;
+        return;
+      }
+    });
+  }
 
   async register(username: string, password: string): Promise<void> {
     if (!username || !password) {

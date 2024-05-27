@@ -2,6 +2,8 @@ import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { NotificationService } from 'src/notification/notification.service';
+import { Observable, Subject, from, of } from 'rxjs';
 
 export class TokenDto {
   @ApiProperty()
@@ -20,7 +22,10 @@ export class UserInfoDto {
 @ApiTags('users')
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(
+    private readonly userService: UserService,
+    private readonly notificationService: NotificationService
+  ) { }
 
   @ApiOperation({ summary: '註冊' })
   @ApiBody({ schema: { properties: { username: { type: 'string' }, password: { type: 'string' } } } })
@@ -35,8 +40,8 @@ export class UserController {
   @ApiBody({
     schema: {
       properties: {
-        username: { type: 'string', example: 'joe' }, 
-        password: { type: 'string', example: 'abc' } 
+        username: { type: 'string', example: 'joe' },
+        password: { type: 'string', example: 'abc' }
       }
     }
   })
@@ -81,19 +86,59 @@ export class UserController {
   @Get()
   async getUsers() {
     const users = await this.userService.getAllUsers();
-    return users.map(user => ({ 
-      username: user.username, 
+    return users.map(user => ({
+      username: user.username,
       status: user.status,
-      avatar: user.avatar 
+      avatar: user.avatar
     }));
   }
 
-  @ApiOperation({ summary: '伺服器資料還原' })
+  @ApiOperation({ summary: '伺服器資料重置' })
   @ApiResponse({ status: 200, description: 'Server data reset successfully' })
   @Get('reset')
   async reset() {
     await this.userService.reset();
     return { message: 'User registered successfully' };
+  }
+
+  @ApiOperation({ summary: '匯出伺服器資料' })
+  @ApiResponse({ status: 200, description: 'Export server data successfully' })
+  @Get('export')
+  export() {
+    let responseSubject = new Subject();
+    this.notificationService.notification$.subscribe(data => {
+      console.log('notificationService', data);
+      if (
+        data.event === 'ResponseChatData'
+      ) {
+        setTimeout(() => {
+          responseSubject.next({
+            users: this.userService.users,
+            ...data.data
+          });
+          responseSubject.complete();
+        });
+      }
+    });
+    this.notificationService.notify({ event: 'RequestChatData', data: '' });
+    return responseSubject.asObservable();
+  }
+
+  @ApiOperation({ summary: '匯入伺服器資料' })
+  @ApiBody({
+    schema: {
+      properties: {
+        users: { type: 'array', items: { type: 'object' } },
+        messageHistory: { type: 'array', items: { type: 'object' } },
+        unreadMessages: { type: 'array', items: { type: 'object' } }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Import server data successfully' })
+  @Post('import')
+  import(@Body() data: any) {
+    this.notificationService.notify({ event: 'ImportChatData', data });
+    return { message: 'Import server data successfully' };
   }
 
 }

@@ -15,11 +15,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  private messageHistory = {
+  messageHistory = {
     general: []
   };
 
-  private unreadMessages = {};
+  unreadMessages = {};
 
   constructor(
     private userService: UserService,
@@ -31,6 +31,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           general: []
         };
         this.unreadMessages = {};
+        return;
+      }
+      if (message.event === 'RequestChatData') {
+        this.notificationService.notify({ 
+          event: 'ResponseChatData', 
+          data: {
+            messageHistory: this.messageHistory,
+            unreadMessages: this.unreadMessages
+          }
+        });
+        return;
+      }
+      if (message.event === 'ImportChatData') {
+        this.messageHistory = message.data.messageHistory;
+        this.unreadMessages = message.data.unreadMessages;
         return;
       }
       this.server.clients.forEach(client => {
