@@ -9,6 +9,14 @@
 [swapper](https://chat-app-backend-t7ug.onrender.com/api/docs)  
 [chat-app-test-page](https://chat-app-backend-t7ug.onrender.com)
 
+## 已實現前端專案
+
+## 推薦文章與參考範例
+
+| 框架 | 推薦文章 | 實作功能 |
+| -------- | -------- | -------- |
+| Angular + @ngrx/signals | [ng-chat-app](https://github.com/JiaHongL/ng-chat-app)  |  - 一隊醫|
+
 ## 下載與啟動專案
 
 ```bash
@@ -17,6 +25,7 @@ $ cd chat-app-backend
 $ npm install
 $ npm run start:dev
 ```
+
 ## Swagger API 文件
 
 打開瀏覽器，輸入 `http://localhost:3000/api/docs`，可以看到 Swagger API 文件。
