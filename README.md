@@ -326,7 +326,7 @@ socket.send(JSON.stringify({
 - 情境：joe 是登入者，當 joe 傳給 john 的訊息時
   - 會建立 private_joe_john 的聊天室，和 private_john_joe 兩個聊天室。
   - 而 雙方都會 會收到 unreadMessages 為 { "room":"private_joe_john", "count": 1 }，意思是 john 收到一個 joe 的訊息，但還未讀取。
-  - 點擊左側訊息列表進入聊天室時，聊天室 (room) 為 private_xxx_joe，意思為接收別人傳過來的聊天室。
-  - 點擊右側上/下線列表進入聊天室時，聊天室 (room)為 private_joe_xxx，意思為傳送給別人訊息的聊天室。
+  - 點擊左側訊息列表進入聊天室時，聊天室 (room) 為 private_john_joe，意思為接收別人傳過來的聊天室。
+  - 點擊右側上/下線列表進入聊天室時，聊天室 (room)為 private_joe_john，意思為傳送給別人訊息的聊天室。
 - 情境：當 joe 傳給 joe，自己傳給自己時。
   - 會直接當做已讀，不會傳送 unreadMessages。
