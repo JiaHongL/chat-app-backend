@@ -9,7 +9,7 @@ import { NotificationService } from 'src/notification/notification.service';
 @ApiTags('chat')
 @ApiExtraModels(SendMessageDto, PrivateMessageDto, MarkAsReadDto)
 @WebSocketGateway({
-  server: true
+  server: true,
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -58,13 +58,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
       const token = url.searchParams.get('token');
-      const decoded = this.userService.verifyToken(token);
+      const decoded = await this.userService.verifyToken(token); // 使用 await 確保非阻塞
       await this.userService.autoLogin(token);
       const user = await this.userService.findByUsername(decoded.username);
       client['username'] = user.username;
-
-      // 發送大廳聊天歷史
-      client.send(JSON.stringify({ event: 'messageHistory', data: { room: 'general', messages: this.messageHistory.general } }));
 
       // 發送大廳未讀消息數量
       client.send(JSON.stringify({ event: 'unreadMessages', data: { room: 'general', count: this.getUnreadCount('general', client['username']) } }));
@@ -84,12 +81,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // 更新在線用戶列表
       this.updateOnlineUsers();
 
+      // 發送大廳聊天歷史
       setTimeout(() => {
-        // 通知客戶端連接成功
-        client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));
-        console.log('=================================================================================');
-        console.log(`>> User ${user.username} connected`);     
-      });
+        client.send(JSON.stringify({ event: 'messageHistory', data: { room: 'general', messages: this.messageHistory.general } }));
+        setTimeout(() => {
+          // 通知客戶端連接成功
+          client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));
+          console.log('=================================================================================');
+          console.log(`>> User ${user.username} connected`);     
+        });
+      }, 200);
 
     } catch (error) {
       client.close();
