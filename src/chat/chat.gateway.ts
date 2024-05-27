@@ -48,19 +48,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const user = await this.userService.findByUsername(decoded.username);
       client['username'] = user.username;
 
-      console.log(`User ${user.username} connected`);
-
-      // 發送一般聊天歷史
+      // 發送大廳聊天歷史
       client.send(JSON.stringify({ event: 'messageHistory', data: { room: 'general', messages: this.messageHistory.general } }));
 
-      // 發送未讀消息數量
+      // 發送大廳未讀消息數量
       client.send(JSON.stringify({ event: 'unreadMessages', data: { room: 'general', count: this.getUnreadCount('general', client['username']) } }));
+
+      // 發送大廳聊天室的每個人的未讀消息資訊
+      client.send(JSON.stringify({ event: 'generalUnReadInfo', data: this.unreadMessages['general']||{}}));
 
       // 發送私人訊息歷史和未讀數量
       Object.keys(this.messageHistory).forEach(room => {
         if (room.startsWith('private_') && room.includes(user.username)) {
           client.send(JSON.stringify({ event: 'messageHistory', data: { room, messages: this.messageHistory[room] } }));
-          client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, client['username']) } }));
+          const receiver = room.split('_')[2];
+          client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, receiver) } }));
         }
       });
 
@@ -71,6 +73,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         // 通知客戶端連接成功
         client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));
         console.log('=================================================================================');
+        console.log(`>> User ${user.username} connected`);
         console.log('>> this.messageHistory', this.messageHistory);
         console.log('>> this.unreadMessages', this.unreadMessages);        
       });
@@ -81,6 +84,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: any) {
+    console.log('=================================================================================');
     const username = client['username'];
     console.log(`User ${username} disconnected`);
     // 檢查是否有用戶在線 (同時登入多個網頁)
@@ -151,24 +155,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    let receiverConnected = false;
-
     this.server.clients.forEach((c: any) => {
       if (c['username'] === data.to) { // 如果接收者連接
-        receiverConnected = true;
         c.send(JSON.stringify({ event: 'privateMessage', data: roomData }));
         c.send(JSON.stringify({ event: 'privateMessage', data: reverseRoomData }));
-        this.updateUnreadCount(roomData.room, data.sender, data.to);
-      } else if (c['username'] === data.sender) {
+      } else if (c['username'] === data.sender) { // 如果發送者連接
         c.send(JSON.stringify({ event: 'privateMessage', data: roomData }));
         c.send(JSON.stringify({ event: 'privateMessage', data: reverseRoomData }));
       }
     });
 
-    // 如果接收者未連接，更新未讀訊息數量
-    if (!receiverConnected) {
-      this.updateUnreadCount(roomData.room, roomData.sender, roomData.to);
-    }
+    this.updateUnreadCount(roomData.room, roomData.sender, roomData.to);
   }
 
   @SubscribeMessage('markAsRead')
@@ -183,14 +180,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (type === 'general'){
       client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, username) } }));
+      this.sendGeneralUnreadInfo();
     }
 
     if (type === 'private') {
-      this.server.clients.forEach((c: any) => {
-        if (c['username'] === username) {
-          c.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, username) } }));
-        }
-      });
+      const sender = room.split('_')[1];
+      const receiver = room.split('_')[2];
+      const senderClient = Array.from(this.server.clients).find((c: any) => c['username'] === sender) as any;
+      const receiverClient = Array.from(this.server.clients).find((c: any) => c['username'] === receiver) as any;
+      if (senderClient) {
+        senderClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, username) } }));
+      }
+      if (receiverClient) {
+        receiverClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, username) } }));
+      }
     } 
     console.log('>> handleMarkAsRead unreadMessages', this.unreadMessages);
   }
@@ -218,9 +221,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.unreadMessages[room][receiver] = 0;
       }
       this.unreadMessages[room][receiver]++;
-      const client = Array.from(this.server.clients).find((c: any) => c['username'] === receiver) as any;
-      if (client) {
-        client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.unreadMessages[room][receiver] } }));
+      const receiveClient = Array.from(this.server.clients).find((c: any) => c['username'] === receiver) as any;
+      const senderClient = Array.from(this.server.clients).find((c: any) => c['username'] === sender) as any;
+      if (receiveClient) {
+        receiveClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.unreadMessages[room][receiver] } }));
+      }
+      if (senderClient) {
+        senderClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.unreadMessages[room][receiver] } }));
       }
     } else {
       // 獲取所有使用者
@@ -243,6 +250,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           }
         }
       });
+      // 更新發送者的未讀訊息數量
+      this.unreadMessages[room][sender] = 0;
+      this.sendGeneralUnreadInfo();
     }
   }
 
@@ -250,6 +260,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const onlineUsers = await this.userService.getOnlineUsers();
     this.server.clients.forEach((client: any) => {
       client.send(JSON.stringify({ event: 'onlineUsers', data: { users: onlineUsers } }));
+    });
+  }
+
+  private sendGeneralUnreadInfo() {
+    this.server.clients.forEach((client: any) => {
+      client.send(JSON.stringify({ event: 'generalUnReadInfo', data: this.unreadMessages['general'] }));
     });
   }
 }
