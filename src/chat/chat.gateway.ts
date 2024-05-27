@@ -88,9 +88,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         // 通知客戶端連接成功
         client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));
         console.log('=================================================================================');
-        console.log(`>> User ${user.username} connected`);
-        console.log('>> this.messageHistory', this.messageHistory);
-        console.log('>> this.unreadMessages', this.unreadMessages);        
+        console.log(`>> User ${user.username} connected`);     
       });
 
     } catch (error) {
