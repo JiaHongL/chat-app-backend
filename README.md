@@ -169,6 +169,33 @@ socket.send(JSON.stringify({
 
 > 只會在第一次連接成功時，接收歷史訊息。
 
+
+#### 接收公共聊天室的未讀資訊
+    
+```javascript
+{
+    "event": "generalUnReadInfo",
+    "data": {
+        "jane": 69,
+        "john": 50,
+        "linda": 69,
+        "david": 2,
+        "jessica": 96,
+        "amanda": 69,
+        "emily": 69,
+        "jason": 50,
+        "joe": 0,
+        "windows": 2,
+        "vue": 2,
+        "angular": 2,
+        "react": 2,
+        "apple": 1
+    }
+}
+```
+
+> 當有人已讀公共聊天室的訊息或是發送新訊息時，就會收到未讀訊息的數量。
+
 #### 接收私人訊息的歷史訊息
 
 ```javascript
@@ -298,8 +325,8 @@ socket.send(JSON.stringify({
 - private_{data.sender}_{data.to} 為私人聊天室，data.sender 為發送者，data.to 為接收者。
 - 情境：joe 是登入者，當 joe 傳給 john 的訊息時
   - 會建立 private_joe_john 的聊天室，和 private_john_joe 兩個聊天室。
-  - 而 john 會收到 unreadMessages 為 { "room":"private_joe_john", "count": 1 }，意思是 john 收到一個 joe 的訊息，但還未讀。
-  - 左側訊息通知列點擊後，room 為 private_xxx_joe，意思為接收別人傳過來的聊天室。
-  - 右側上下線列表點擊後，room 為 private_joe_xxx，意思為傳送給別人訊息的聊天室。
+  - 而 雙方都會 會收到 unreadMessages 為 { "room":"private_joe_john", "count": 1 }，意思是 john 收到一個 joe 的訊息，但還未讀取。
+  - 點擊左側訊息列表進入聊天室時，聊天室 (room) 為 private_xxx_joe，意思為接收別人傳過來的聊天室。
+  - 點擊右側上/下線列表進入聊天室時，聊天室 (room)為 private_joe_xxx，意思為傳送給別人訊息的聊天室。
 - 情境：當 joe 傳給 joe，自己傳給自己時。
   - 會直接當做已讀，不會傳送 unreadMessages。
