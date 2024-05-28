@@ -73,14 +73,32 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.send(JSON.stringify({ event: 'generalUnReadInfo', data: this.unreadMessages['general']||{}}));
       })
 
+      const copyMessageHistory = JSON.parse(JSON.stringify(this.messageHistory)); 
+
       // 發送私人訊息歷史和未讀數量
-      Object.keys(this.messageHistory).forEach(room => {
+      Object.keys(copyMessageHistory).forEach(room => {
+        // 發送私人聊天歷史 ( 自己房間 (john) 和 對方房間 (jane) ) Ex: private_john_jane, private_jane_john
         if (room.startsWith('private_') && room.includes(user.username)) {
           setTimeout(() => {
-            client.send(JSON.stringify({ event: 'messageHistory', data: { room, messages: this.messageHistory[room] } }));
-            const receiver = room.split('_')[2];
-            client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, receiver) } }));
-          })
+            const messages = copyMessageHistory[room].map((msg: any) => {
+              if (msg.isRecalled) {
+                return {
+                  id: msg.id,
+                  room: msg.room,
+                  sender: msg.sender,
+                  to: msg.to,
+                  isRecalled: true
+                }
+              }
+              return msg;
+            });
+            client.send(JSON.stringify({ event: 'messageHistory', data: { room, messages } }));
+          });
+        }
+        // 發送未讀消息數量
+        if (room.startsWith('private_') && room.endsWith('_' + user.username)) {
+          const receiver = user.username;
+          client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, receiver) } }));
         }
       });
 
@@ -91,12 +109,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // 發送大廳聊天歷史
       setTimeout(() => {
-        client.send(JSON.stringify({ event: 'messageHistory', data: { room: 'general', messages: this.messageHistory.general } }));
+        const messages = copyMessageHistory.general.map((msg: any) => {
+          if (msg.isRecalled) {
+            return {
+              id: msg.id,
+              room: msg.room,
+              isRecalled: true,
+              sender: msg.sender
+            }
+          }
+          return msg;
+        });
+        client.send(JSON.stringify({ event: 'messageHistory', data: { room: 'general', messages } }));
         setTimeout(() => {
           // 通知客戶端連接成功
-          client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));
-          console.log('=================================================================================');
-          console.log(`>> User ${user.username} connected`);     
+          client.send(JSON.stringify({ event: 'initializationComplete', data: { message : 'Relevant initialization data has been sent' } }));  
         });
       }, 200);
 
@@ -127,6 +154,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('=================================================================================');
     console.log('>> handleMessage data', data);
     data.date = new Date().toISOString();
+    data.id = this.generateGUID();
+    data.isRecalled = false;
+    data.readBy = [data.sender];
     this.server.clients.forEach((c: any) => {
       if (c['room'] === data.room) {
         c.send(JSON.stringify({ event: 'message', data }));
@@ -136,8 +166,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
     this.messageHistory[data.room] = this.messageHistory[data.room] || [];
     this.messageHistory[data.room].push(data);
-    this.updateUnreadCount(data.room, data.sender);
-    console.log('>> handleMessage messageHistory', this.messageHistory);
+    this.updateGeneralUnreadCount('message', {
+      sender: data.sender,
+    });
   }
 
   @SubscribeMessage('privateMessage')
@@ -145,7 +176,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('=================================================================================');
     console.log('>> handlePrivateMessage data', data);
     data.date = new Date().toISOString();
-
+    data.id = this.generateGUID();
+    data.isRead = false;
+    data.isRecalled = false;
     let roomData = JSON.parse(JSON.stringify(data)); // 用戶的房間
     roomData.room = `private_${data.sender}_${data.to}`;
 
@@ -168,8 +201,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.messageHistory[roomData.room].push(roomData);
       this.messageHistory[reverseRoomData.room].push(reverseRoomData);
     }
-
-    console.log('>> handlePrivateMessage messageHistory', this.messageHistory);
 
     // 自己傳給自己的訊息不計算未讀訊息數量
     if (data.sender === data.to) {
@@ -195,39 +226,181 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('=================================================================================');
     console.log('>> handleMarkAsRead data', data);
     const { room, type } = data;
-    const username = client['username'];
-    if (this.unreadMessages[room]) {
-      this.unreadMessages[room][username] = 0;
-    }
 
     if (type === 'general'){
-      client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, username) } }));
-      this.sendGeneralUnreadInfo();
+      this.messageHistory.general.forEach((message: any) => {
+        message.readBy.includes(data.reader) ? null : message.readBy.push(data.reader);
+      });
+      this.updateGeneralUnreadCount('markAsRead',{
+        reader: data.reader
+      });
     }
 
     if (type === 'private') {
       const sender = room.split('_')[1];
       const receiver = room.split('_')[2];
+
       const senderClient = Array.from(this.server.clients).find((c: any) => c['username'] === sender) as any;
       const receiverClient = Array.from(this.server.clients).find((c: any) => c['username'] === receiver) as any;
+
+      const _room = `private_${sender}_${receiver}`;
+      const _reverseRoom = `private_${receiver}_${sender}`;
+
+      this.messageHistory[_room] = this.messageHistory[_room].map((message: any) => {
+        return {
+          ...message,
+          isRead: true
+        };
+      });
+
+      this.messageHistory[_reverseRoom] = this.messageHistory[_reverseRoom].map((message: any) => {
+        return {
+          ...message,
+          isRead: true
+        };
+      });
+
       if (senderClient) {
-        senderClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, username) } }));
+        senderClient.send(JSON.stringify({ event: 'privateMessageRead', data: { room:`private_${sender}_${receiver}`}}));
+        senderClient.send(JSON.stringify({ event: 'privateMessageRead', data: { room:`private_${receiver}_${sender}`}}));
       }
       if (receiverClient) {
-        receiverClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.getUnreadCount(room, username) } }));
+        receiverClient.send(JSON.stringify({ event: 'privateMessageRead', data: { room:`private_${sender}_${receiver}`}}));
+        receiverClient.send(JSON.stringify({ event: 'privateMessageRead', data: { room:`private_${receiver}_${sender}`}}));
       }
+
+      this.updateUnreadCount(_room, sender, receiver);
+
     } 
-    console.log('>> handleMarkAsRead unreadMessages', this.unreadMessages);
+
   }
 
-  private getUnreadCount(room: string, username: string): number {
-    if (!this.unreadMessages[room] || !this.unreadMessages[room][username]) {
-      return 0;
+  @SubscribeMessage('recallMessage')
+  handelRecallMessage(@MessageBody()data, @ConnectedSocket() client: any) {
+    console.log('=================================================================================');
+    console.log('>> handelRecallMessage data', data);
+    const messageId = data.id;
+    const room = data.room;
+    if(room === 'general') { // 如果是大廳訊息
+      this.messageHistory[room] = this.messageHistory[room].map((message: any) => {
+        if (message.id === messageId) {
+          message.isRecalled = true;
+        }
+        return message;
+      });
+      const sender = this.messageHistory[room].find((message: any) => message.id === messageId).sender;
+      this.server.clients.forEach((c: any) => {
+        c.send(JSON.stringify({ event: 'messageRecalled', data: {  sender,room, id:messageId, isRecalled:true } }));
+      });
+      this.updateGeneralUnreadCount('recall', {
+        sender
+      });
+    }else{ // 如果是私人訊息
+      const sender = this.messageHistory[room].find((message: any) => message.id === messageId).sender;
+      const to = this.messageHistory[room].find((message: any) => message.id === messageId).to;
+      const _room = `private_${sender}_${to}`;
+      const _reverseRoom = `private_${to}_${sender}`;
+
+      this.messageHistory[_room] = this.messageHistory[_room].map((message: any) => {
+        if (message.id === messageId) {
+          message.isRecalled = true;
+        }
+        return message;
+      });
+
+      this.messageHistory[_reverseRoom] = this.messageHistory[_reverseRoom].map((message: any) => {
+        if (message.id === messageId) {
+          message.isRecalled = true;
+        }
+        return message;
+      });
+
+      // 如果發送者和接收者是同一個人，則只發送一次收回訊息事件
+      if (sender=== to) {
+        client.send(JSON.stringify({ event: 'messageRecalled', data: { sender, to, room, id:messageId } }));
+        return;
+      }
+
+      this.server.clients.forEach((c: any) => {
+        if (c['username'] === sender || c['username'] === to) {
+          c.send(JSON.stringify({ event: 'messageRecalled', data: { sender, to, room:_room, id:messageId, isRecalled:true  } }));
+          c.send(JSON.stringify({ event: 'messageRecalled', data: { sender, to, room: _reverseRoom, id:messageId, isRecalled:true  } }));
+        }
+      });
+
+      const isRead = this.messageHistory[_room].find((message: any) => message.id === messageId).isRead;
+      if(!isRead){
+        this.updateUnreadCount(`private_${sender}_${to}`, sender, to, 'recallPrivateMessage', messageId);
+      }
     }
-    return this.unreadMessages[room][username];
   }
 
-  private async updateUnreadCount(room: string, sender: string, receiver?: string) {
+  @SubscribeMessage('undoRecallMessage')
+  handleUndoRecallMessage(@MessageBody()data, @ConnectedSocket() client: any) {
+    console.log('=================================================================================');
+    console.log('>> handleUndoRecallMessage data', data);
+
+    const messageId = data.id;
+    const room = data.room;
+    const sender = data.sender;
+    if(room === 'general') {
+      this.messageHistory[room] = this.messageHistory[room].map((message: any) => {
+        if (message.id === messageId) {
+          message.isRecalled = false;
+        }
+        return message;
+      });
+      const message = this.messageHistory[room].find((message: any) => message.id === messageId);
+      this.server.clients.forEach((c: any) => {
+        c.send(JSON.stringify({ event: 'messageUndoRecalled', data: message, isRecalled:false  }));
+      });
+      this.updateGeneralUnreadCount('undoRecall', {
+        sender
+      });
+    }else {
+      const sender = room.split('_')[1];
+      const receiver = room.split('_')[2];
+      const reverseRoom = `private_${receiver}_${sender}`;
+
+      this.messageHistory[room] = this.messageHistory[room].map((message: any) => {
+        if (message.id === messageId) {
+          message.isRecalled = false;
+        }
+        return message;
+      });
+
+      this.messageHistory[reverseRoom] = this.messageHistory[reverseRoom].map((message: any) => {
+        if (message.id === messageId) {
+          message.isRecalled = false;
+        }
+        return message;
+      });
+
+      const message = this.messageHistory[room].find((message: any) => message.id === messageId);
+      const reverseMessage = this.messageHistory[reverseRoom].find((message: any) => message.id === messageId);
+
+      if (sender === receiver) {
+        client.send(JSON.stringify({ event: 'messageUndoRecalled', data: message, isRecalled:false }));
+        console.log('undoRecallPrivateMessage 自己傳給自己的訊息不計算未讀訊息數量');
+        return;
+      }
+
+      this.server.clients.forEach((c: any) => {
+        if (c['username'] === sender || c['username'] === receiver) {
+          c.send(JSON.stringify({ event: 'messageUndoRecalled', data: message, isRecalled:false }));
+          c.send(JSON.stringify({ event: 'messageUndoRecalled', data: reverseMessage, isRecalled:false }));
+        }
+      });
+      
+      if(!message.isRead){
+        this.updateUnreadCount(`private_${message.sender}_${message.to}`, message.sender, message.to, 'undoRecallPrivateMessage', messageId);
+      }
+
+    }
+
+  }
+
+  private async updateUnreadCount(room: string, sender: string, receiver: string, action: 'recallPrivateMessage' | 'undoRecallPrivateMessage' | null = null, messageId ='') {
 
     if(sender === receiver) { // 如果發送者和接收者是同一個人，不計算未讀訊息數量
       return;
@@ -237,45 +410,127 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.unreadMessages[room] = {};
     }
 
-    if (receiver) {
-      // 只更新接收者的未讀訊息數量
-      if (!this.unreadMessages[room][receiver]) {
-        this.unreadMessages[room][receiver] = 0;
-      }
-      this.unreadMessages[room][receiver]++;
-      const receiveClient = Array.from(this.server.clients).find((c: any) => c['username'] === receiver) as any;
-      const senderClient = Array.from(this.server.clients).find((c: any) => c['username'] === sender) as any;
+    if (action === 'recallPrivateMessage') { // 如果是撤回訊息，則減少未讀訊息數量
+      const message = this.messageHistory[room].find((message: any) => message.id === messageId) as PrivateMessageDto;
+      const _room = `private_${message.sender}_${message.to}`;
+      this.unreadMessages[_room][message.to]--;
+      const receiveClient = Array.from(this.server.clients).find((c: any) => c['username'] === message.to) as any;
       if (receiveClient) {
         receiveClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.unreadMessages[room][receiver] } }));
       }
-      if (senderClient) {
-        senderClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.unreadMessages[room][receiver] } }));
-      }
-    } else {
-      // 獲取所有使用者
-      const users = await this.userService.getAllUsers();
+      return;
+    }
 
-      // 更新所有除了發送者之外的用戶的未讀訊息數量
-      users.forEach((user) => {
-        const username = user.username;
-        if (username !== sender) {
-          if (!this.unreadMessages[room][username]) {
-            this.unreadMessages[room][username] = 0;
-          }
-          this.unreadMessages[room][username]++;
-          // 如果用戶在線，發送未讀訊息數量更新
-          if (user.status === 'online') {
-            const client = Array.from(this.server.clients).find((c: any) => c['username'] === username) as any;
-            if (client) {
-              client.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.unreadMessages[room][username] } }));
-            }
-          }
+    if(action === 'undoRecallPrivateMessage') { // 如果是撤回訊息，則減少未讀訊息數量
+      const message = this.messageHistory[room].find((message: any) => message.id === messageId) as PrivateMessageDto;
+      const _room = `private_${message.sender}_${message.to}`;
+      this.unreadMessages[_room][message.to]++;
+      const receiveClient = Array.from(this.server.clients).find((c: any) => c['username'] === message.to) as any;
+      if (receiveClient) {
+        receiveClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.unreadMessages[room][receiver] } }));
+      }
+      return;
+    }
+
+    // 如果用戶不在未讀消息列表中，則創建一個新的
+    if (!this.unreadMessages[room][receiver]) {
+      this.unreadMessages[room][receiver] = 0;
+    }
+  
+    const roomData = this.messageHistory[room];
+    let unreadCount = 0;
+    roomData.forEach((message: any) => {
+      if (!message.isRead && !message.isRecalled) {
+        unreadCount++;
+      }
+    });
+    this.unreadMessages[room][receiver] = unreadCount;
+    const receiveClient = Array.from(this.server.clients).find((c: any) => c['username'] === receiver) as any;
+    const senderClient = Array.from(this.server.clients).find((c: any) => c['username'] === sender) as any;
+    if (receiveClient) {
+      receiveClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.unreadMessages[room][receiver] } }));
+    }
+    if (senderClient) {
+      senderClient.send(JSON.stringify({ event: 'unreadMessages', data: { room, count: this.unreadMessages[room][receiver] } }));
+    }
+  }
+
+  private getUnreadCount(room: string, username: string): number {
+    if (!this.unreadMessages[room] || !this.unreadMessages[room][username]) {
+      return 0;
+    }
+    return this.unreadMessages[room][username];
+  }
+
+  private async updateGeneralUnreadCount(
+    action: 'message' | 'markAsRead' | 'recall' | 'undoRecall', {
+      sender = '',
+      reader = ''
+    }
+  ){
+    if (!this.unreadMessages['general']) {
+      this.unreadMessages['general'] = {};
+    }
+
+    const users = await this.userService.getAllUsers();
+    
+    users.forEach((user: any) => {
+      // 如果用戶不在未讀消息列表中，則創建一個新的
+      if (
+        !this.unreadMessages['general'][user.username]
+      ) {
+        this.unreadMessages['general'][user.username] = 0;
+      }
+
+      // 送訊息的人，直接已讀 
+      if (
+        action === 'message' &&
+        user.username === sender
+      ) {
+        this.unreadMessages['general'][user.username] = 0;
+        return;
+      }
+
+      // 已讀消息
+      if (
+        action === 'markAsRead' &&
+        user.username === reader
+      ) {
+        this.unreadMessages['general'][user.username] = 0;
+        return;
+      }
+
+      let unreadCount = 0;
+
+      this.messageHistory.general.forEach((message: any) => {
+        // 不在已讀列表中且未被撤回的訊息
+        if (!message.readBy.includes(user.username) && !message.isRecalled) {
+          unreadCount++;
         }
       });
-      // 更新發送者的未讀訊息數量
-      this.unreadMessages[room][sender] = 0;
-      this.sendGeneralUnreadInfo();
-    }
+      this.unreadMessages['general'][user.username] = unreadCount;
+    });
+
+    this.sendMessagesReadByUpdated();
+
+    this.server.clients.forEach((client: any) => {
+      const username = client['username'];
+      client.send(JSON.stringify({ event: 'unreadMessages', data: { room: 'general', count: this.getUnreadCount('general', username) } }));
+    });
+  }
+
+  private sendMessagesReadByUpdated() {
+    this.server.clients.forEach((client: any) => {
+      client.send(JSON.stringify({ 
+        event: 'messagesReadByUpdated', 
+        data: this.messageHistory.general.map((msg: any) => {
+          return {
+            id: msg.id,
+            readBy: msg.readBy
+          }
+        })
+      }));
+    });
   }
 
   private async updateOnlineUsers() {
@@ -285,9 +540,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  private sendGeneralUnreadInfo() {
-    this.server.clients.forEach((client: any) => {
-      client.send(JSON.stringify({ event: 'generalUnReadInfo', data: this.unreadMessages['general'] }));
-    });
+  private generateGUID() {
+    const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    const timestamp = new Date().getTime();
+    const timeString = timestamp.toString(16);
+    return timeString + '-' + s4() + '-' + s4();
   }
+
 }
