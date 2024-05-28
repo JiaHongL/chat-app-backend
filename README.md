@@ -4,11 +4,6 @@
 
 > origin 的限定可自行調整 src/main.ts 相關程式碼。
 
-## Swagger 文件 & 線上測試頁
-
-[swapper](https://chat-app-backend-t7ug.onrender.com/api/docs)  
-[chat-app-test-page](https://chat-app-backend-t7ug.onrender.com)
-
 ## 已實現的前端專案
 
 | 框架 | 專案 |
@@ -16,11 +11,13 @@
 | Angular + @ngrx/signals | [ng-chat-app](https://github.com/JiaHongL/ng-chat-app)  | 
 
 ### 前端實現功能
+
 - 大廳聊天室功能 (一對多)
 - 私訊功能 (一對一)
 - 上線 / 離線 的狀態顯示
 - 未讀訊息數量提示
 - 已讀功能 / 已讀數量提示
+- 收回訊息 / 恢復訊息
 
 ![alt text](image.png)
 
@@ -94,7 +91,8 @@ socket.send(JSON.stringify({
     "event": "markAsRead",
     "data": {
         "room": "general",
-        "type": "general"
+        "type": "general",
+        "reader": "john"
     }
 }));
 ```
@@ -119,11 +117,36 @@ socket.send(JSON.stringify({
     "event": "markAsRead",
     "data": {
         "room": "private_john_joe",
-        "type": "private"
+        "type": "private",
+        "reader": 'david'
     }
 }));
 ```
 > private_{data.sender}_{data.to} 為私人聊天室的名稱，joe 已讀 john 的訊息。
+
+#### 收回訊息
+
+```javascript
+socket.send(JSON.stringify({
+    "event": "retractMessage",
+    "data": {
+        room: 'private_joe_john',
+        id: '18fc0qxe9b-06d0-221c'
+    }
+}));
+```
+
+#### 恢復訊息
+
+```javascript
+socket.send(JSON.stringify({
+    "event": "undoRecallMessage",
+    "data": {
+        room: 'private_joe_john',
+        id: '18fc0qxe9b-06d0-221c'
+    }
+}));
+```
 
 ### Client 接收 Server 訊息
 
@@ -161,22 +184,31 @@ socket.send(JSON.stringify({
         "room":"general",
         "messages":[
             {
+                "id":'18fc0qxe9b-06d0-221c',
                 "room":"general",
                 "message":"hi",
                 "sender":"joe",
-                "date":"2024-05-22T18:49:57.811Z"
+                "date":"2024-05-22T18:49:57.811Z",
+                "isRecalled": false,
+                "readBy": ['joe','john','jane','linda']
             },
             {
+                "id":'18fcsdf0qxe9b-06d0-221c',
                 "room":"general",
                 "message":"hi hi!",
                 "sender":"john",
-                "date":"2024-05-22T18:51:50.811Z"
+                "date":"2024-05-22T18:51:50.811Z",
+                "isRecalled": false,
+                "readBy": ['joe','john']
             },
             {
+                "id":'18fc0sdfqxe9b-06d0-221c',
                 "room":"general",
                 "message":"hi hi ~",
                 "sender":"jane",
                 "date":"2024-05-22T18:52:37.811Z"
+                "isRecalled": false,
+                "readBy": ['joe','john','jane']
             }
         ]
     }
@@ -185,32 +217,6 @@ socket.send(JSON.stringify({
 
 > 只會在第一次連接成功時，接收歷史訊息。
 
-
-#### 接收公共聊天室的未讀資訊
-    
-```javascript
-{
-    "event": "generalUnReadInfo",
-    "data": {
-        "jane": 69,
-        "john": 50,
-        "linda": 69,
-        "david": 2,
-        "jessica": 96,
-        "amanda": 69,
-        "emily": 69,
-        "jason": 50,
-        "joe": 0,
-        "windows": 2,
-        "vue": 2,
-        "angular": 2,
-        "react": 2,
-        "apple": 1
-    }
-}
-```
-
-> 當有人已讀公共聊天室的訊息或是發送新訊息時，就會收到未讀訊息的數量。
 
 #### 接收私人訊息的歷史訊息
 
@@ -225,13 +231,17 @@ socket.send(JSON.stringify({
                 "to":"john",
                 "message":"hi john",
                 "sender":"joe",
-                "date":"2024-05-22T18:49:57.811Z"
+                "date":"2024-05-22T18:49:57.811Z",
+                "isRead": true,
+                "isRecalled": false
             },{
                 "room":"private_john_joe",
                 "to":"joe",
                 "message":"hihi",
                 "sender":"john",
-                "date":"2024-05-22T18:49:57.811Z"
+                "date":"2024-05-22T18:49:57.811Z",
+                "isRead": true,
+                "isRecalled": false
             }]
         }
 }
@@ -247,10 +257,13 @@ socket.send(JSON.stringify({
 {
     "event":"message",
     "data":{
+        "id":'18fc0qxe9b-06d0-221c',
         "room":"general",
         "message":"hi ~",
         "sender":"joe",
-        "date":"2024-05-22T18:49:57.811Z"
+        "date":"2024-05-22T18:49:57.811Z",
+        "isRecalled": false,
+        "readBy": ['joe']
     }
 }
 ```
@@ -267,7 +280,9 @@ socket.send(JSON.stringify({
         "to":"joe",
         "message":"hi!",
         "sender":"john",
-        "date":"2024-05-22T18:49:57.811Z"
+        "date":"2024-05-22T18:49:57.811Z",
+        "isRead": false,
+        "isRecalled": false
     }
 }
 ```
@@ -334,6 +349,58 @@ socket.send(JSON.stringify({
 ```
 
 > 當有人註冊成功後，就會通知全部的人需更新使用者列表，且會重送新的使用者列表。
+
+#### 通知有訊息被收回
+
+```javascript
+{
+    "event": "messageRecalled",
+    "data": {
+        "sender": "david",
+        "to": "joe",
+        "room": "private_david_joe",
+        "id": "18fc1112322e-1123f4-2c60",
+        "isRecalled": true
+    }
+}
+```
+
+#### 通知有訊息被恢復
+
+```javascript
+{
+    "event": "messageUndoRecalled",
+    "data": {
+        "to": "joe",
+        "message": "嗨",
+        "sender": "david",
+        "date": "2024-05-28T21:27:30.094Z",
+        "id": "18fc119e22e-1df4-2c60",
+        "isRead": false,
+        "isRecalled": false,
+        "room": "private_joe_david"
+    },
+    "isRecalled": false
+}
+```
+
+#### 通知 General 每個訊息的已讀人員
+
+```javascript
+{
+    "event":"messagesReadByUpdated",
+    "data":[
+        {
+            "id":'18fc0qxe9b-06d0-221c',
+            "readBy": ['joe','john','jane','linda']
+        },
+        {
+            "id":'18fc0qxe9b-06d0-ss1c',
+            "readBy": ['joe','john']
+        }
+    ]
+}
+```
 
 #### 其他
 
