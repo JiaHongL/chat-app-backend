@@ -317,7 +317,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // 如果發送者和接收者是同一個人，則只發送一次收回訊息事件
       if (sender=== to) {
-        client.send(JSON.stringify({ event: 'messageRecalled', data: { sender, to, room, id:messageId } }));
+        client.send(JSON.stringify({ event: 'messageRecalled', data: { sender, to, room, id:messageId, isRecalled:true  } }));
         return;
       }
 
@@ -474,7 +474,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const users = await this.userService.getAllUsers();
     
-    users.forEach((user: any) => {
+    users?.forEach((user: any) => {
       // 如果用戶不在未讀消息列表中，則創建一個新的
       if (
         !this.unreadMessages['general'][user.username]
