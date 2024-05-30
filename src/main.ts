@@ -6,10 +6,8 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { WsAdapter } from '@nestjs/platform-ws';
 import * as bodyParser from 'body-parser';
-import { fetchGitHubRepo } from 'fetch-github-repo';
 
 async function bootstrap() {
-  await fetchGitHubRepo();
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api'); // 設置全局路徑前綴
   app.enableCors({
