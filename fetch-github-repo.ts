@@ -29,7 +29,7 @@ async function fetchGitHubRepo() {
     shell.exec('npx ng build --configuration production');
 
     const distDir = path.join(angularProjectDir, 'dist/ng-chat-app/browser');
-    const publicDir = path.join(__dirname, 'public');
+    const publicDir = path.join(__dirname, 'dist/public');
     if (!fs.existsSync(distDir)) {
       throw new Error('Build output directory not found');
     }
