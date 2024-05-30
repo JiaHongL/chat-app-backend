@@ -27,7 +27,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Chat App API')
-    .setDescription('這是一個簡單的聊天室應用程式 API 文件，提供註冊、登入、取得使用者資訊、取得全部使用者，預設使用者名稱為 joe，密碼為 abc，其他使用者 jane、john、linda、david，密碼一樣 abc。')
+    .setDescription('這是一個簡單的聊天室應用程式 API 文件，提供註冊、登入、取得使用者資訊、取得全部使用者，預設使用者名稱為 Joe，密碼為 abc，其他使用者 Joe, John, Jane, Jack, David, Linda，密碼一樣 abc，另外 websocket 使用方式請參閱 <a href="https://github.com/JiaHongL/chat-app-backend?tab=readme-ov-file#websocket-api-%E6%96%87%E4%BB%B6" target="_blank"> Github readme</a>。')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

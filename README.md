@@ -10,7 +10,8 @@
 > socket 文件在此 readme 最後面。
 
 [示範網站](https://chat-app-backend-9ma9.onrender.com/#/login)
-> 預設密碼都是 abc
+> 預設帳號：Joe, John, Jane, Jack, David, Linda
+> 預設密碼都是：abc
 
 ## 已實現的前端專案
 
@@ -87,7 +88,7 @@ socket.send(JSON.stringify({
     "data": {
         "room": "general",
         "message": "hi",
-        "sender": "john",
+        "sender": "John",
         "replyToMessageId": "xxx" // 可選，若要回覆訊息時，帶入被回覆訊息的 id
     }
 }));
@@ -101,7 +102,7 @@ socket.send(JSON.stringify({
     "data": {
         "room": "general",
         "type": "general",
-        "reader": "john"
+        "reader": "John"
     }
 }));
 ```
@@ -112,9 +113,9 @@ socket.send(JSON.stringify({
 socket.send(JSON.stringify({
     "event": "privateMessage",
     "data": {
-        "to": "joe",
-        "message": "hi joe",
-        "sender": "john",
+        "to": "Joe",
+        "message": "hi Joe",
+        "sender": "John",
         "replyToMessageId": "xxx" // 可選，若要回覆訊息時，帶入被回覆訊息的 id
     }
 }));
@@ -126,13 +127,13 @@ socket.send(JSON.stringify({
 socket.send(JSON.stringify({
     "event": "markAsRead",
     "data": {
-        "room": "private_john_joe",
+        "room": "private_John_Joe",
         "type": "private",
-        "reader": 'david'
+        "reader": 'David'
     }
 }));
 ```
-> private_{data.sender}_{data.to} 為私人聊天室的名稱，joe 已讀 john 的訊息。
+> private_{data.sender}_{data.to} 為私人聊天室的名稱，Joe 已讀 John 的訊息。
 
 #### 收回訊息
 
@@ -140,7 +141,7 @@ socket.send(JSON.stringify({
 socket.send(JSON.stringify({
     "event": "retractMessage",
     "data": {
-        room: 'private_joe_john',
+        room: 'private_Joe_John',
         id: '18fc0qxe9b-06d0-221c'
     }
 }));
@@ -152,7 +153,7 @@ socket.send(JSON.stringify({
 socket.send(JSON.stringify({
     "event": "undoRecallMessage",
     "data": {
-        room: 'private_joe_john',
+        room: 'private_Joe_John',
         id: '18fc0qxe9b-06d0-221c'
     }
 }));
@@ -179,7 +180,7 @@ socket.send(JSON.stringify({
 {
     "event":"onlineUsers",
     "data":{
-        "users":["joe","john","jane"]
+        "users":["Joe","John","Jane"]
     }
 }
 ```
@@ -197,30 +198,30 @@ socket.send(JSON.stringify({
                 "id":'18fc0qxe9b-06d0-221c',
                 "room":"general",
                 "message":"hi",
-                "sender":"joe",
+                "sender":"Joe",
                 "date":"2024-05-22T18:49:57.811Z",
                 "isRecalled": false,
-                "readBy": ['joe','john','jane','linda'],
+                "readBy": ['Joe','John','Jane','Linda'],
                 "replyToMessageId": "xxx"
             },
             {
                 "id":'18fcsdf0qxe9b-06d0-221c',
                 "room":"general",
                 "message":"hi hi!",
-                "sender":"john",
+                "sender":"John",
                 "date":"2024-05-22T18:51:50.811Z",
                 "isRecalled": false,
-                "readBy": ['joe','john'],
+                "readBy": ['Joe','John'],
                 "replyToMessageId": null
             },
             {
                 "id":'18fc0sdfqxe9b-06d0-221c',
                 "room":"general",
                 "message":"hi hi ~",
-                "sender":"jane",
+                "sender":"Jane",
                 "date":"2024-05-22T18:52:37.811Z"
                 "isRecalled": false,
-                "readBy": ['joe','john','jane'],
+                "readBy": ['Joe','John','Jane'],
                 "replyToMessageId": null
             }
         ]
@@ -237,22 +238,22 @@ socket.send(JSON.stringify({
 {
     "event":"messageHistory",
     "data":{
-        "room":"private_john_joe",
+        "room":"private_John_Joe",
         "messages":[
             {
-                "room":"private_john_joe",
-                "to":"john",
-                "message":"hi john",
-                "sender":"joe",
+                "room":"private_John_Joe",
+                "to":"John",
+                "message":"hi John",
+                "sender":"Joe",
                 "date":"2024-05-22T18:49:57.811Z",
                 "isRead": true,
                 "isRecalled": false,
                 "replyToMessageId": "xxx"
             },{
-                "room":"private_john_joe",
-                "to":"joe",
+                "room":"private_John_Joe",
+                "to":"Joe",
                 "message":"hihi",
-                "sender":"john",
+                "sender":"John",
                 "date":"2024-05-22T18:49:57.811Z",
                 "isRead": true,
                 "isRecalled": false,
@@ -262,7 +263,7 @@ socket.send(JSON.stringify({
 }
 ```
 
-> private_{data.sender}_{data.to} 為私人聊天室的名稱，使用者如果是 joe，可以判斷 private_xxx_joe 是和 xxx 的歷史訊息。  
+> private_{data.sender}_{data.to} 為私人聊天室的名稱，使用者如果是 Joe，可以判斷 private_xxx_Joe 是和 xxx 的歷史訊息。  
 
 > 只會在第一次連接成功時，接收歷史訊息。
 
@@ -275,10 +276,10 @@ socket.send(JSON.stringify({
         "id":'18fc0qxe9b-06d0-221c',
         "room":"general",
         "message":"hi ~",
-        "sender":"joe",
+        "sender":"Joe",
         "date":"2024-05-22T18:49:57.811Z",
         "isRecalled": false,
-        "readBy": ['joe'],
+        "readBy": ['Joe'],
         "replyToMessageId": null // 可選，若是有，會帶入被回覆訊息的 id
     }
 }
@@ -292,10 +293,10 @@ socket.send(JSON.stringify({
 {
     "event":"privateMessage",
     "data":{
-        "room":"private_john_joe",
-        "to":"joe",
+        "room":"private_John_Joe",
+        "to":"Joe",
         "message":"hi!",
-        "sender":"john",
+        "sender":"John",
         "date":"2024-05-22T18:49:57.811Z",
         "isRead": false,
         "isRecalled": false,
@@ -328,13 +329,13 @@ socket.send(JSON.stringify({
 {
     "event":"unreadMessages",
     "data":{
-        "room":"private_john_joe",
+        "room":"private_John_Joe",
         "count": 5
     }
 }
 ```
 
-> 可用來顯示未讀數量，private_{data.sender}_{data.to} 為私人聊天室的名稱，joe 有來至 john 的 5 個未讀訊息。
+> 可用來顯示未讀數量，private_{data.sender}_{data.to} 為私人聊天室的名稱，Joe 有來至 John 的 5 個未讀訊息。
 
 > 當有人在私人聊天室發送新訊息時，就會收到未讀訊息的數量。
 
@@ -346,19 +347,19 @@ socket.send(JSON.stringify({
 {
     "event":"updateUserList",
     "data": [{
-        username: "joe",
+        username: "Joe",
         online: true
         avatar: "https://www.example.com/avatar.jpg"
     },{
-        username: "john",
+        username: "John",
         online: false
         avatar: "https://www.example.com/avatar.jpg"
     },{
-        username: "jane",
+        username: "Jane",
         online: true
         avatar: "https://www.example.com/avatar.jpg"
     },{
-        username: "jack",
+        username: "Jack",
         online: false
         avatar: "https://www.example.com/avatar.jpg"
     }]
@@ -373,9 +374,9 @@ socket.send(JSON.stringify({
 {
     "event": "messageRecalled",
     "data": {
-        "sender": "david",
-        "to": "joe",
-        "room": "private_david_joe",
+        "sender": "David",
+        "to": "Joe",
+        "room": "private_David_Joe",
         "id": "18fc1112322e-1123f4-2c60",
         "isRecalled": true,
         "replyToMessageId": null // 可選，若是有，會帶入被回覆訊息的 id
@@ -389,14 +390,14 @@ socket.send(JSON.stringify({
 {
     "event": "messageUndoRecalled",
     "data": {
-        "to": "joe",
+        "to": "Joe",
         "message": "嗨",
-        "sender": "david",
+        "sender": "David",
         "date": "2024-05-28T21:27:30.094Z",
         "id": "18fc119e22e-1df4-2c60",
         "isRead": false,
         "isRecalled": false,
-        "room": "private_joe_david",
+        "room": "private_Joe_David",
         "replyToMessageId": null // 可選，若是有，會帶入被回覆訊息的 id
     },
     "isRecalled": false
@@ -411,11 +412,11 @@ socket.send(JSON.stringify({
     "data":[
         {
             "id":'18fc0qxe9b-06d0-221c',
-            "readBy": ['joe','john','jane','linda']
+            "readBy": ['Joe','John','Jane','Linda']
         },
         {
             "id":'18fc0qxe9b-06d0-ss1c',
-            "readBy": ['joe','john']
+            "readBy": ['Joe','John']
         }
     ]
 }
@@ -425,10 +426,10 @@ socket.send(JSON.stringify({
 
 - 公共聊天室的 room 固定為 general。
 - private_{data.sender}_{data.to} 為私人聊天室，data.sender 為發送者，data.to 為接收者。
-- 情境：joe 是登入者，當 joe 傳給 john 的訊息時
-  - 會建立 private_joe_john 的聊天室，和 private_john_joe 兩個聊天室。
-  - 而 雙方都會 會收到 unreadMessages 為 { "room":"private_joe_john", "count": 1 }，意思是 john 收到一個 joe 的訊息，但還未讀取。
-  - 點擊左側訊息列表進入聊天室時，聊天室 (room) 為 private_john_joe，意思為接收別人傳過來的聊天室。
-  - 點擊右側上/下線列表進入聊天室時，聊天室 (room)為 private_joe_john，意思為傳送給別人訊息的聊天室。
-- 情境：當 joe 傳給 joe，自己傳給自己時。
+- 情境：Joe 是登入者，當 Joe 傳給 John 的訊息時
+  - 會建立 private_Joe_John 的聊天室，和 private_John_Joe 兩個聊天室。
+  - 而 雙方都會 會收到 unreadMessages 為 { "room":"private_Joe_John", "count": 1 }，意思是 John 收到一個 Joe 的訊息，但還未讀取。
+  - 點擊左側訊息列表進入聊天室時，聊天室 (room) 為 private_John_Joe，意思為接收別人傳過來的聊天室。
+  - 點擊右側上/下線列表進入聊天室時，聊天室 (room)為 private_Joe_John，意思為傳送給別人訊息的聊天室。
+- 情境：當 Joe 傳給 Joe，自己傳給自己時。
   - 會直接當做已讀，不會傳送 unreadMessages。

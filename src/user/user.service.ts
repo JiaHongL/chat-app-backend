@@ -14,55 +14,55 @@ interface User {
 export class UserService {
   private mockUsers: User[] = [
     {
-      username: 'joe',
+      username: 'Joe',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=joe'
     },
     {
-      username: 'jane',
+      username: 'Jane',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=jane'
     },
     {
-      username: 'john',
+      username: 'John',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=john'
     },
     {
-      username: 'linda',
+      username: 'Linda',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=linda'
     },
     {
-      username: 'david',
+      username: 'David',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=david'
     },
     {
-      username: 'jessica',
+      username: 'Jessica',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=jessica'
     },
     {
-      username: 'amanda',
+      username: 'Amanda',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=amanda'
     },
     {
-      username: 'emily',
+      username: 'Emily',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=emily'
     },
     {
-      username: 'jason',
+      username: 'Jason',
       password: '$2b$10$wT.4KS9AE9J3FzJJLIjyEOuI/qs3IfJinYv044ab/66kIy34NRhI.',
       status: 'offline',
       avatar: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=jason'
