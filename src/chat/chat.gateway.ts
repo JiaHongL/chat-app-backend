@@ -290,7 +290,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       const sender = this.messageHistory[room].find((message: any) => message.id === messageId).sender;
       this.server.clients.forEach((c: any) => {
-        c.send(JSON.stringify({ event: 'messageRecalled', data: {  sender,room, id:messageId, isRecalled:true } }));
+        c.send(JSON.stringify({ event: 'messageRecalled', data: { 
+          sender,room, 
+          id:messageId, isRecalled:true,
+          replyToMessageId: this.messageHistory[room].find((message: any) => message.id === messageId).replyToMessageId
+        } }));
       });
       this.updateGeneralUnreadCount('recall', {
         sender
@@ -317,14 +321,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // 如果發送者和接收者是同一個人，則只發送一次收回訊息事件
       if (sender=== to) {
-        client.send(JSON.stringify({ event: 'messageRecalled', data: { sender, to, room, id:messageId, isRecalled:true  } }));
+        client.send(JSON.stringify({ 
+          event: 'messageRecalled', 
+          data: { 
+            sender, 
+            to, 
+            room, 
+            id:messageId, 
+            isRecalled:true,
+            replyToMessageId: this.messageHistory[_room].find((message: any) => message.id === messageId)?.replyToMessageId   
+          }}));
         return;
       }
 
       this.server.clients.forEach((c: any) => {
         if (c['username'] === sender || c['username'] === to) {
-          c.send(JSON.stringify({ event: 'messageRecalled', data: { sender, to, room:_room, id:messageId, isRecalled:true  } }));
-          c.send(JSON.stringify({ event: 'messageRecalled', data: { sender, to, room: _reverseRoom, id:messageId, isRecalled:true  } }));
+          c.send(JSON.stringify({ event: 'messageRecalled', data: { 
+            sender, to, room:_room, id:messageId, isRecalled:true, replyToMessageId: this.messageHistory[_room].find((message: any) => message.id === messageId)?.replyToMessageId  
+          } }));
+          c.send(JSON.stringify({ event: 'messageRecalled', data: { 
+            sender, to, room: _reverseRoom, id:messageId, isRecalled:true, replyToMessageId: this.messageHistory[_reverseRoom].find((message: any) => message.id === messageId)?.replyToMessageId  
+          } }));
         }
       });
 
