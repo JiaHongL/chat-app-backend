@@ -79,7 +79,8 @@ socket.send(JSON.stringify({
     "data": {
         "room": "general",
         "message": "hi",
-        "sender": "john"
+        "sender": "john",
+        "replyToMessageId": "xxx" // 可選，若要回覆訊息時，帶入被回覆訊息的 id
     }
 }));
 ```
@@ -105,7 +106,8 @@ socket.send(JSON.stringify({
     "data": {
         "to": "joe",
         "message": "hi joe",
-        "sender": "john"
+        "sender": "john",
+        "replyToMessageId": "xxx" // 可選，若要回覆訊息時，帶入被回覆訊息的 id
     }
 }));
 ```
@@ -190,7 +192,8 @@ socket.send(JSON.stringify({
                 "sender":"joe",
                 "date":"2024-05-22T18:49:57.811Z",
                 "isRecalled": false,
-                "readBy": ['joe','john','jane','linda']
+                "readBy": ['joe','john','jane','linda'],
+                "replyToMessageId": "xxx"
             },
             {
                 "id":'18fcsdf0qxe9b-06d0-221c',
@@ -199,7 +202,8 @@ socket.send(JSON.stringify({
                 "sender":"john",
                 "date":"2024-05-22T18:51:50.811Z",
                 "isRecalled": false,
-                "readBy": ['joe','john']
+                "readBy": ['joe','john'],
+                "replyToMessageId": null
             },
             {
                 "id":'18fc0sdfqxe9b-06d0-221c',
@@ -208,7 +212,8 @@ socket.send(JSON.stringify({
                 "sender":"jane",
                 "date":"2024-05-22T18:52:37.811Z"
                 "isRecalled": false,
-                "readBy": ['joe','john','jane']
+                "readBy": ['joe','john','jane'],
+                "replyToMessageId": null
             }
         ]
     }
@@ -233,7 +238,8 @@ socket.send(JSON.stringify({
                 "sender":"joe",
                 "date":"2024-05-22T18:49:57.811Z",
                 "isRead": true,
-                "isRecalled": false
+                "isRecalled": false,
+                "replyToMessageId": "xxx"
             },{
                 "room":"private_john_joe",
                 "to":"joe",
@@ -241,7 +247,8 @@ socket.send(JSON.stringify({
                 "sender":"john",
                 "date":"2024-05-22T18:49:57.811Z",
                 "isRead": true,
-                "isRecalled": false
+                "isRecalled": false,
+                "replyToMessageId": null
             }]
         }
 }
@@ -263,7 +270,8 @@ socket.send(JSON.stringify({
         "sender":"joe",
         "date":"2024-05-22T18:49:57.811Z",
         "isRecalled": false,
-        "readBy": ['joe']
+        "readBy": ['joe'],
+        "replyToMessageId": null // 可選，若是有，會帶入被回覆訊息的 id
     }
 }
 ```
@@ -282,7 +290,8 @@ socket.send(JSON.stringify({
         "sender":"john",
         "date":"2024-05-22T18:49:57.811Z",
         "isRead": false,
-        "isRecalled": false
+        "isRecalled": false,
+        "replyToMessageId": null // 可選，若是有，會帶入被回覆訊息的 id
     }
 }
 ```
@@ -360,7 +369,8 @@ socket.send(JSON.stringify({
         "to": "joe",
         "room": "private_david_joe",
         "id": "18fc1112322e-1123f4-2c60",
-        "isRecalled": true
+        "isRecalled": true,
+        "replyToMessageId": null // 可選，若是有，會帶入被回覆訊息的 id
     }
 }
 ```
@@ -378,7 +388,8 @@ socket.send(JSON.stringify({
         "id": "18fc119e22e-1df4-2c60",
         "isRead": false,
         "isRecalled": false,
-        "room": "private_joe_david"
+        "room": "private_joe_david",
+        "replyToMessageId": null // 可選，若是有，會帶入被回覆訊息的 id
     },
     "isRecalled": false
 }
