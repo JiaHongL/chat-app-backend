@@ -4,11 +4,19 @@
 
 > origin 的限定可自行調整 src/main.ts 相關程式碼。
 
+## 文件介紹
+
+[Swagger API 文件](https://chat-app-backend-9ma9.onrender.com/api/docs)  
+> socket 文件在此 readme 最後面。
+
+[示範網站](https://chat-app-backend-9ma9.onrender.com/#/login)
+> 預設密碼都是 abc
+
 ## 已實現的前端專案
 
-| 框架 | 專案 |
+| 框架 | 程式碼 |
 | -------- | -------- |
-| Angular + @ngrx/signals | [ng-chat-app](https://github.com/JiaHongL/ng-chat-app)  | 
+| Angular + @ngrx/signals | [ng-chat-app](https://github.com/JiaHongL/ng-chat-app)  |
 
 ### 前端實現功能
 
