@@ -3,7 +3,8 @@ import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty
 import { UserService } from './user.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { NotificationService } from 'src/notification/notification.service';
-import { Observable, Subject, from, of } from 'rxjs';
+import { Subject } from 'rxjs';
+import { FakeData } from './fake-data';
 
 export class TokenDto {
   @ApiProperty()
@@ -131,8 +132,9 @@ export class UserController {
         users: { type: 'array', items: { type: 'object' } },
         messageHistory: { type: 'array', items: { type: 'object' } },
         unreadMessages: { type: 'array', items: { type: 'object' } }
-      }
-    }
+      },
+      example: FakeData
+    },
   })
   @ApiResponse({ status: 200, description: 'Import server data successfully' })
   @Post('import')
@@ -142,4 +144,3 @@ export class UserController {
   }
 
 }
-
