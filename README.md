@@ -18,6 +18,7 @@
 | 框架 | 程式碼 |
 | -------- | -------- |
 | Angular + @ngrx/signals | [ng-chat-app](https://github.com/JiaHongL/ng-chat-app)  |
+| Vue + Pinia|[vue-chat-app](https://github.com/JiaHongL/vue-chat-app) |
 
 ### 前端實現功能
 
