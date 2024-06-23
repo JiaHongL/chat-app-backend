@@ -41,7 +41,7 @@ export class UserController {
   @ApiBody({
     schema: {
       properties: {
-        username: { type: 'string', example: 'joe' },
+        username: { type: 'string', example: 'Joe' },
         password: { type: 'string', example: 'abc' }
       }
     }
